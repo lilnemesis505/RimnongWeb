@@ -102,16 +102,13 @@
                 @endif
             </td>
          <td>
-    @php
-        $slipPath = 'storage/app/public/slips/slip_' . $order->order_id . '.jpg';
-    @endphp
-    @if(file_exists(public_path($slipPath)))
-        <a href="{{ url($slipPath) }}" target="_blank">
-            <img src="{{ url($slipPath) }}" alt="Slip" style="width: 50px;">
-        </a>
-    @else
-        <span>ไม่มีสลิป</span>
-    @endif
+     @if(!empty($order->slips_url))
+    <a href="{{ $order->slips_url }}" target="_blank">
+        <img src="{{ $order->slips_url }}" alt="Slip" style="width: 50px;">
+    </a>
+@else
+    <span>ไม่มีสลิป</span>
+@endif
 </td>
             <td>
                 <a href="{{ route('order.details', ['id' => $order->order_id]) }}" class="btn btn-info btn-sm">

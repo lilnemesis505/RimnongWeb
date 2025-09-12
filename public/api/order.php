@@ -8,7 +8,8 @@ header('Content-Type: application/json');
 
 // เพิ่ม autoload ของ Composer (ปรับ path ตามจริง)
 require_once __DIR__ . '/../../vendor/autoload.php';
-
+$dotenv = Dotenv\Dotenv::createImmutable(__DIR__ . '/../../');
+$dotenv->load();
 use ImageKit\ImageKit;
 
 
@@ -44,9 +45,9 @@ try {
     }
 
     $imageKit = new ImageKit(
-        'public_S3cZPtMJKWgU5sCA4u8sW2u/rOk=',
-        'private_fvwKcuOleXQE8Sz6fbZFliTjS8s=',
-        'https://ik.imagekit.io/lilnemesis505/'
+        $_ENV['IMAGEKIT_PUBLIC_KEY'],
+        $_ENV['IMAGEKIT_PRIVATE_KEY'],
+        $_ENV['IMAGEKIT_URL_ENDPOINT']
     );
 
     $pdo->beginTransaction();
