@@ -97,8 +97,9 @@ class ProductController extends Controller
         return view('layouts.products.edit', compact('product', 'types'));
     }
 
-    public function update(Request $request, $pro_id)
+     public function update(Request $request, $pro_id)
     {
+        // 1. Validate the request data
         $request->validate([
             'pro_name' => 'required|string|max:255',
             'price' => 'required|numeric',
@@ -107,39 +108,67 @@ class ProductController extends Controller
         ]);
 
         $product = Product::findOrFail($pro_id);
+
+        // 2. Handle image update if a new file is uploaded
+        if ($request->hasFile('image')) {
+            $image = $request->file('image');
+            
+            // 2.1 Delete the old image from ImageKit if it exists
+            if ($product->image_id) {
+                try {
+                    $this->imageKit->deleteFile($product->image_id);
+                    Log::info('Deleted old image from ImageKit.', ['fileId' => $product->image_id]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to delete old image from ImageKit.', ['error' => $e->getMessage()]);
+                }
+            }
+
+            // 2.2 Upload the new image to ImageKit
+            try {
+                $uploadResult = $this->imageKit->uploadFile([
+                    'file' => base64_encode(file_get_contents($image->getRealPath())),
+                    'fileName' => uniqid() . '_' . $image->getClientOriginalName(),
+                    'folder' => '/products'
+                ]);
+
+                // 2.3 Check for upload success
+                if ($uploadResult->result->url !== null) {
+                    $product->image = $uploadResult->result->url;
+                    $product->image_id = $uploadResult->result->fileId;
+                } else {
+                    Log::error('ImageKit upload failed:', ['error' => $uploadResult->error]);
+                    $errorMessage = property_exists($uploadResult->error, 'message') ? $uploadResult->error->message : 'Unknown error';
+                    return redirect()->back()->with('error', 'การอัปโหลดรูปภาพใหม่ล้มเหลว: ' . $errorMessage);
+                }
+            } catch (\Exception $e) {
+                Log::error('An unexpected error occurred during image upload: ' . $e->getMessage());
+                return redirect()->back()->with('error', 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ');
+            }
+        }
+
+        // 3. Update other product data
         $product->pro_name = $request->pro_name;
         $product->price = $request->price;
         $product->type_id = $request->type_id;
 
-        if ($request->hasFile('image')) {
-            $image = $request->file('image');
-            $uploadResult = $this->imageKit->uploadFile([
-                'file' => base64_encode(file_get_contents($image->getRealPath())),
-                'fileName' => $image->getClientOriginalName(),
-                'folder' => '/products'
-            ]);
-
-            if (!property_exists($uploadResult, 'error')) {
-                // บันทึก URL ใหม่ลงในฐานข้อมูล
-                $product->image = $uploadResult->result->url;
-            } else {
-                $errorMessage = is_object($uploadResult->error) && property_exists($uploadResult->error, 'message')
-                    ? $uploadResult->error->message
-                    : 'Unknown error';
-                Log::error('ImageKit upload failed: ' . json_encode($uploadResult->error));
-                return redirect()->back()->with('error', 'การอัปโหลดรูปภาพล้มเหลว: ' . $errorMessage);
-            }
-        }
-
         $product->save();
 
+        // 4. Redirect with a success message
         return redirect()->route('product.index')->with('success', 'แก้ไขข้อมูลเรียบร้อยแล้ว');
     }
+
 
     public function destroy($pro_id)
     {
         $product = Product::findOrFail($pro_id);
-
+            if ($product->image_id) {
+                try {
+                    $this->imageKit->deleteFile($product->image_id);
+                    Log::info('Deleted old image from ImageKit.', ['fileId' => $product->image_id]);
+                } catch (\Exception $e) {
+                    Log::error('Failed to delete old image from ImageKit.', ['error' => $e->getMessage()]);
+                }
+            }
         $product->delete();
 
         return redirect()->route('product.index')->with('success', 'ลบสินค้าสำเร็จแล้ว');
