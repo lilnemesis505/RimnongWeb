@@ -173,4 +173,14 @@ class ProductController extends Controller
 
         return redirect()->route('product.index')->with('success', 'ลบสินค้าสำเร็จแล้ว');
     }
+     public function indexApi()
+    {
+        // 1. ดึงข้อมูลสินค้าทั้งหมดจากฐานข้อมูลด้วย Eloquent
+        $products = Product::all();
+
+        // 2. ส่งข้อมูลกลับไปในรูปแบบ JSON
+        // Laravel จะจัดการแปลงข้อมูลเป็น JSON ให้โดยอัตโนมัติ
+        return response()->json($products);
+    }
 }
+

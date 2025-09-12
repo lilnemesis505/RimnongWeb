@@ -1,5 +1,0 @@
-Array
-(
-    [username] => 123
-    [password] => 123456
-)

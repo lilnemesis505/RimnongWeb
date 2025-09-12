@@ -8,23 +8,24 @@ use Illuminate\Database\Eloquent\Model;
 class Order extends Model
 {
     use HasFactory;
-    
-    public $timestamps = false;
-    protected $table = 'order';
-    protected $primaryKey = 'order_id';
 
+    // ✅ เพิ่มส่วนนี้เข้าไปทั้งหมด
+    protected $primaryKey = 'order_id'; // บอก Laravel ว่า Primary Key ของตารางนี้คือ 'order_id'
+    public $timestamps = false; // บอก Laravel ว่าตารางนี้ไม่มีคอลัมน์ created_at, updated_at
+    protected $table = 'order';
     protected $fillable = [
-        'total_amount',
+        'cus_id',
+        'order_date',
+        'em_id',
+        'promo_id',
+        'price_total',
+        'receive_date',
         'remarks',
         'slips_url',
-        'slips_id',
+        'slips_id'
     ];
 
-    public function details()
-    {
-        return $this->hasMany(OrderDetail::class, 'order_id');
-    }
-
+    // --- ส่วนของ Relationships (ถ้ามีอยู่แล้วก็ไม่ต้องเพิ่ม) ---
     public function customer()
     {
         return $this->belongsTo(Customer::class, 'cus_id', 'cus_id');
@@ -38,5 +39,10 @@ class Order extends Model
     public function promotion()
     {
         return $this->belongsTo(Promotion::class, 'promo_id', 'promo_id');
+    }
+
+    public function details()
+    {
+        return $this->hasMany(OrderDetail::class, 'order_id', 'order_id');
     }
 }
