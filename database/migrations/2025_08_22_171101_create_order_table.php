@@ -22,7 +22,8 @@ class CreateOrderTable extends Migration
             $table->unsignedBigInteger('promo_id')->nullable();
             $table->decimal('price_total', 10, 2);
             $table->string('remarks', 255)->nullable();
-        
+            $table->string('slips_url', 255)->nullable();
+            $table->string('slips_id', 255)->nullable();
 
             // Foreign Keys
             $table->foreign('cus_id')->references('cus_id')->on('customer')->onDelete('cascade');

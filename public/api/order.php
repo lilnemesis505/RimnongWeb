@@ -1,51 +1,56 @@
 <?php
-// order.php
+
+ob_start();
+ini_set('display_errors', 0);
+ini_set('display_startup_errors', 0);
+error_reporting(E_ALL);
 header('Content-Type: application/json');
 
-// เชื่อมต่อฐานข้อมูล
-$host = 'localhost';
-$dbname = 'rimnong'; 
-$user = 'root';
-$pass = '';
+// เพิ่ม autoload ของ Composer (ปรับ path ตามจริง)
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+use ImageKit\ImageKit;
+
+
+function log_order_error($message) {
+    $logFile = __DIR__ . '/order_error.log';
+    $date = date('Y-m-d H:i:s');
+    file_put_contents($logFile, "[$date] $message\n", FILE_APPEND);
+}
+
+// log ว่าเริ่มต้น script
+log_order_error('--- script start ---');
 
 try {
+    // เชื่อมต่อฐานข้อมูล
+    $host = 'localhost';
+    $dbname = 'rimnong'; 
+    $user = 'root';
+    $pass = '';
+
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8", $user, $pass);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    echo json_encode(['status' => 'error', 'message' => 'Database connection failed']);
-    exit;
-}
 
-// ตรวจสอบว่าคำขอเป็นแบบ multipart/form-data และมีไฟล์รูปภาพสลิปถูกอัปโหลด
-if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_FILES['slip_image'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid request or no slip image uploaded']);
-    exit;
-}
+    // ตรวจสอบ request
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_FILES['slip_image'])) {
+        throw new Exception('Invalid request or no slip image uploaded');
+    }
 
-// รับข้อมูลจาก fields ที่ถูกส่งมา
-$data = $_POST;
-// ข้อมูล order_items ถูก encode เป็น JSON string มาจาก Flutter ต้อง decode กลับ
-$orderItems = json_decode($data['order_items'], true);
+    $data = $_POST;
+    $orderItems = json_decode($data['order_items'] ?? '', true);
 
-// ตรวจสอบข้อมูลที่จำเป็น
-if (!is_array($orderItems) || empty($orderItems) || !isset($data['cus_id']) || !isset($data['price_total'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Invalid order data received']);
-    exit;
-}
+    if (!is_array($orderItems) || empty($orderItems) || !isset($data['cus_id']) || !isset($data['price_total'])) {
+        throw new Exception('Invalid order data received: ' . json_encode($data));
+    }
 
-// ตรวจสอบประเภทไฟล์
-$allowed_extensions = ['jpg', 'jpeg', 'png'];
-$image_extension = strtolower(pathinfo($_FILES['slip_image']['name'], PATHINFO_EXTENSION));
+    $imageKit = new ImageKit(
+        'public_S3cZPtMJKWgU5sCA4u8sW2u/rOk=',
+        'private_fvwKcuOleXQE8Sz6fbZFliTjS8s=',
+        'https://ik.imagekit.io/lilnemesis505/'
+    );
 
-if (!in_array($image_extension, $allowed_extensions)) {
-    echo json_encode(['status' => 'error', 'message' => 'Unsupported file type. Only JPG, JPEG, and PNG are allowed.']);
-    exit;
-}
-
-try {
     $pdo->beginTransaction();
 
-    // 1. ตรวจสอบ promo_id ก่อนบันทึก
     $promoId = isset($data['promo_id']) && !empty($data['promo_id']) ? $data['promo_id'] : null;
     if ($promoId !== null) {
         $stmtPromo = $pdo->prepare("SELECT COUNT(*) FROM `promotion` WHERE promo_id = ?");
@@ -54,9 +59,9 @@ try {
             throw new Exception("Invalid promo_id: The specified promotion does not exist.");
         }
     }
-    
+
     $remarks = $data['remarks'] ?? '';
-    
+
     $stmtOrder = $pdo->prepare("INSERT INTO `order` (cus_id, order_date, promo_id, price_total, remarks) 
                                 VALUES (:cus_id, NOW(), :promo_id, :price_total, :remarks)");
     $stmtOrder->execute([
@@ -68,18 +73,6 @@ try {
     
     $orderId = $pdo->lastInsertId();
 
-    // 2. อัปโหลดสลิป
-    $slipImage = $_FILES['slip_image'];
-    $fileName = 'slip_' . $orderId . '.' . $image_extension;
-    $uploadPath = '../storage/app/public/slips/';
-    
-    if (!is_dir($uploadPath)) {
-        mkdir($uploadPath, 0777, true);
-    }
-    
-    move_uploaded_file($slipImage['tmp_name'], $uploadPath . $fileName);
-
-    // 3. บันทึกรายละเอียดสินค้าลงในตาราง 'order_detail'
     $stmtDetail = $pdo->prepare("INSERT INTO order_detail (order_id, pro_id, amount, price_list, pay_total) 
                                  VALUES (:order_id, :pro_id, :amount, :price_list, :pay_total)");
     foreach ($orderItems as $item) {
@@ -92,11 +85,42 @@ try {
         ]);
     }
 
+    $slipImage = $_FILES['slip_image'];
+    $fileName = 'slip_' . $orderId . '.' . pathinfo($slipImage['name'], PATHINFO_EXTENSION);
+
+    $uploadResult = $imageKit->uploadFile([
+        'file' => base64_encode(file_get_contents($slipImage['tmp_name'])),
+        'fileName' => $fileName,
+        'folder' => '/Slips'
+    ]);
+
+    if (!isset($uploadResult->result)) {
+        throw new Exception("ImageKit upload failed: " . ($uploadResult->error->message ?? 'Unknown error'));
+    }
+
+    $slipImageUrl = $uploadResult->result->url;
+    $slipFileId = $uploadResult->result->fileId;
+
+    $stmtUpdateSlip = $pdo->prepare("UPDATE `order` SET slips_url = ?, slips_id = ? WHERE order_id = ?");
+    $stmtUpdateSlip->execute([$slipImageUrl, $slipFileId, $orderId]);
+
     $pdo->commit();
 
     echo json_encode(['status' => 'success', 'order_id' => $orderId]);
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    log_order_error($e->getMessage());
     echo json_encode(['status' => 'error', 'message' => 'Failed to save order: ' . $e->getMessage()]);
 }
-?>
+
+// ตรวจสอบ output ที่ไม่ใช่ JSON และ log ทิ้ง
+$output = ob_get_contents();
+ob_end_clean();
+if (preg_match('/^\s*{.*}\s*$/s', $output)) {
+    echo $output;
+} else {
+    log_order_error("Non-JSON output: " . $output);
+    echo json_encode(['status' => 'error', 'message' => 'Internal server error']);
+}

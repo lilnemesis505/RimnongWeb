@@ -15,6 +15,9 @@ class Order extends Model
 
     protected $fillable = [
         'total_amount',
+        'remarks',
+        'slips_url',
+        'slips_id',
     ];
 
     public function details()
