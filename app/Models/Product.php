@@ -27,6 +27,4 @@ class Product extends Model
         return $this->belongsTo(Protype::class, 'type_id');
     }
    
-    // 🔥 ลบ method getImagePathAttribute() ทิ้ง
-    // เพราะเราจะใช้ field 'image' ที่เก็บ URL จาก ImageKit โดยตรง
 }

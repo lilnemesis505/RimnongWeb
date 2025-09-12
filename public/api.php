@@ -18,26 +18,10 @@ if (!$result) {
 }
 
 $products = [];
-$baseUrl = 'http://10.0.2.2/storage/products/';
-$storagePath = realpath(__DIR__ . '/../storage/app/public/products/') . '/';
-$extensions = ['png', 'jpg', 'jpeg'];
 
 while ($row = $result->fetch_assoc()) {
-    $imagePath = null;
-
-    foreach ($extensions as $ext) {
-        $fileName = $row['pro_id'] . '.' . $ext;
-        $fullPath = $storagePath . $fileName;
-
-        if (file_exists($fullPath)) {
-            $imagePath = $baseUrl . $fileName;
-            break;
-        }
-    }
-
-    // ถ้าไม่เจอไฟล์ภาพ ให้ใช้ภาพ default
-    $fallbackImage = 'no-image.png';
-    $row['image_url'] = $imagePath ?? $baseUrl . $fallbackImage;
+    // ดึง URL รูปภาพจากคอลัมน์ 'image' โดยตรง
+    $row['image_url'] = $row['image'] ?? 'https://placehold.co/100x100?text=No+Image';
 
     $products[] = $row;
 }
