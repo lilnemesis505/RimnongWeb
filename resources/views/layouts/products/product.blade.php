@@ -4,14 +4,12 @@
     <meta charset="UTF-8">
     <title>ข้อมูลสินค้า</title>
 
-    <!-- AdminLTE CSS via CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
-    <!-- Navbar -->
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
 
         <form action="{{ route('product.filter') }}" method="GET" class="form-inline ml-3">
@@ -33,7 +31,6 @@
 </form>
     </nav>
 
-    <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -51,7 +48,7 @@
                 <hr style="border-top: 1px solid #fff;">
                 <ul class="nav nav-pills nav-sidebar flex-column">
                     <li class="nav-item">
-                        <a href="#" class="nav-link active" >
+                        <a href="{{ route('product.index') }}" class="nav-link active" >
                             <i class="nav-icon fas fa-shopping-cart"></i>
                             <p>ข้อมูลสินค้า</p>
                         </a>
@@ -79,27 +76,14 @@
         </div>
     </aside>
 
-    <!-- Content Wrapper -->
     <div class="content-wrapper p-3">
     <div class="container-fluid">
         <div class="row">
             @foreach($products as $product)
                 <div class="col-6 col-md-3 col-lg-2 mb-3">
                     <div class="card h-100 d-flex flex-column" style="border: 1px solid #ccc; min-height: 380px;">
-                        @php
-                            $extensions = ['jpg', 'jpeg', 'png', 'gif', 'svg'];
-                            $imagePath = null;
-
-                            foreach ($extensions as $ext) {
-                                $path = 'storage/products/' . $product->pro_id . '.' . $ext;
-                                if (file_exists(public_path($path))) {
-                                    $imagePath = asset($path);
-                                    break;
-                                }
-                            }
-                        @endphp
-
-                       <img src="{{ $product->image_path }}" class="card-img-top" alt="รูปสินค้า"style="height: 300px; width: 100%; object-fit: cover;">
+                        
+                        <img src="{{ $product->image }}" class="card-img-top" alt="รูปสินค้า" style="height: 300px; width: 100%; object-fit: cover;">
 
 
                         <div class="card-body mt-auto p-2">
@@ -123,7 +107,6 @@
             @endforeach
         </div>
 
-        <!-- Pagination -->
         <div class="d-flex justify-content-center">
             {{ $products->links() }}
         </div>
@@ -131,7 +114,6 @@
 </div>
 </div>
 
-<!-- AdminLTE JS via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>
 </html>

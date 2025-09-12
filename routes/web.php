@@ -23,16 +23,6 @@ Route::post('/login', [AdminLoginController::class, 'login'])->name('login.submi
 Route::post('/logout', [AdminLoginController::class, 'logout'])->name('logout');
 
 
-Route::get('/product-image/{filename}', function ($filename) {
-    $path = storage_path('app/public/products/' . $filename);
-
-    if (!Storage::disk('public')->exists('products/' . $filename)) {
-        abort(404);
-    }
-
-    return response()->file($path);
-});
-
 
 //admin loginก่อน
 Route::middleware('admin.auth')->group(function () {

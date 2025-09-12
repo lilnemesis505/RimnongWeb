@@ -3,20 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <title>แก้ไขข้อมูลสินค้า</title>
-    <!-- AdminLTE CSS via CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
 
-    <!-- Navbar -->
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">แก้ไขข้อมูลสินค้า</span>
     </nav>
 
-     <!-- Sidebar -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
         </a>
@@ -61,12 +58,10 @@
         </div>
     </aside>
 
-    <!-- Content Wrapper -->
-<div class="content-wrapper p-3">
+    <div class="content-wrapper p-3">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-8"> <!-- ปรับขนาดตามต้องการ -->
-                <div class="card card-warning">
+            <div class="col-md-8"> <div class="card card-warning">
                     <div class="card-header">
                         <h3 class="card-title"><i class="fas fa-gear"></i> แก้ไขข้อมูลสินค้า</h3>
                     </div>
@@ -76,13 +71,11 @@
     @csrf
     @method('PUT')
     <div class="card-body">
-        <!-- ชื่อสินค้า -->
         <div class="form-group">
             <label>ชื่อสินค้า</label>
             <input type="text" name="pro_name" class="form-control" value="{{ $product->pro_name }}" required>
         </div>
 
-        <!-- ประเภทสินค้า -->
         <div class="form-group">
             <label>ประเภทสินค้า</label><br><br>
             @foreach($types as $type)
@@ -94,47 +87,30 @@
             @endforeach
         </div>
 
-        <!-- ราคา -->
         <div class="form-group">
             <label>ราคา</label>
             <input type="number" name="price" class="form-control" value="{{ $product->price }}" required>
         </div>
-        <!-- อัปโหลดรูปใหม่ -->
-<div class="form-group mt-3">
+        <div class="form-group mt-3">
     <label for="image">เลือกรูปใหม่</label>
     <input type="file" name="image" id="image" class="form-control-file" accept="image/*">
 
 </div>
 
-            <!-- แสดงรูปเก่า -->
+            {{-- 🔥🔥 ส่วนที่ถูกแก้ไข 🔥🔥 --}}
             <div class="mt-3 text-center">
-               @php
-    $extensions = ['jpg', 'jpeg', 'png', 'gif', 'svg'];
-    $imagePath = null;
-
-    foreach ($extensions as $ext) {
-        $path = 'storage/products/' . $product->pro_id . '.' . $ext;
-        if (file_exists(public_path($path))) {
-            $imagePath = asset($path);
-            break;
-        }
-    }
-@endphp
-
-<div class="mt-3 text-center">
-    @if($imagePath)
-        <label class="d-block">รูปปัจจุบัน:</label>
-        <img src="{{ $imagePath }}" class="img-fluid border" style="max-height: 200px;">
-    @else
-        <p class="text-muted">ไม่มีรูปสินค้าเดิม</p>
-    @endif
-</div>
+                @if($product->image)
+                    <label class="d-block">รูปปัจจุบัน:</label>
+                    <img src="{{ $product->image }}" class="img-fluid border" style="max-height: 200px;">
+                @else
+                    <p class="text-muted">ไม่มีรูปสินค้าเดิม</p>
+                @endif
+            </div>
 
         </div>
     </div>
 
-    <!-- ปุ่มบันทึกและลบ -->
-<div class="card-footer d-flex justify-content-end gap-2">
+    <div class="card-footer d-flex justify-content-end gap-2">
     <button type="submit" class="btn btn-warning">
         <i class="fas fa-save"></i> บันทึกการแก้ไข
     </button>
@@ -155,7 +131,6 @@
 </div>
 
 
-<!-- AdminLTE JS via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>
 </html>
