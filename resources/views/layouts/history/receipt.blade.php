@@ -102,20 +102,20 @@
 
                     <div class="d-flex justify-content-between font-weight-bold mb-2">
                         <span>ราคารวมสุทธิ:</span>
-                        <span>{{ number_format($receipt->price_total, 2) }} บาท</span>
+                        <span>{{ number_format($receipt->price_total ?? 0, 2) }} บาท</span>
                     </div>
                     
                     <hr class="my-2">
 
-                    <div class="receipt-footer mt-4">
-                        <p class="text-sm mb-1">
-                            <strong>พนักงาน:</strong> {{ $order->employee->em_name ?? 'ไม่มี' }}
-                        </p>
-                        <p class="text-sm mb-1">
-                            <strong>เบอร์โทร:</strong> {{ $order->employee->em_tel ?? 'ไม่มี' }}
-                        </p>
-                        <p class="mt-3">ขอบคุณที่ใช้บริการ</p>
-                    </div>
+                   <div class="receipt-footer mt-4">
+                <p class="text-sm mb-1">
+                 <strong>พนักงาน:</strong> {{ $order->employee->em_name ?? 'ไม่ระบุ' }}
+                 </p>
+                    <p class="text-sm mb-1">
+                  <strong>เบอร์โทร:</strong> {{ $order->employee->em_tel ?? 'ไม่ระบุ' }}
+                </p>
+                    <p class="mt-3">ขอบคุณที่ใช้บริการ</p>
+                </div>
                 </div>
             </div>
         </section>
