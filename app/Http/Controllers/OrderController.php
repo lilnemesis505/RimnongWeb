@@ -61,7 +61,7 @@ class OrderController extends Controller
             $netTotal = $subtotal - $discount;
 
             // ค้นหาหรือสร้าง record ในตาราง receipt
-            $receipt = Receipt::firstOrCreate(
+            $receipt = Receipt ::firstOrCreate(
                 ['order_id' => $order->order_id],
                 [
                     're_date' => $order->receive_date,
