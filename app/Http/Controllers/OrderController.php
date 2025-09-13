@@ -50,41 +50,7 @@ class OrderController extends Controller
         return redirect()->route('history.index')->with('error', 'ไม่สามารถลบรายการที่ดำเนินการแล้วได้');
     }
 
-   public function generateReceipt($id)
-    {
-        try {
-            $order = Order::with(['customer', 'employee', 'promotion', 'details.product'])->findOrFail($id);
-
-            // คำนวณราคาสุทธิ
-            $subtotal = $order->details->sum('pay_total');
-            $discount = $order->promotion->promo_discount ?? 0;
-            $netTotal = $subtotal - $discount;
-
-            // ค้นหาหรือสร้าง record ในตาราง receipt
-            $receipt = Receipt ::firstOrCreate(
-                ['order_id' => $order->order_id],
-                [
-                    're_date' => $order->receive_date,
-                    'price_total' => $netTotal,
-                ]
-            );
-
-            // เพิ่มการตรวจสอบว่า $receipt ถูกสร้างหรือดึงมาได้สำเร็จ
-            if (!$receipt) {
-                // หากไม่สำเร็จ ให้โยน Exception
-                throw new \Exception('Failed to create receipt record.');
-            }
-
-            return view('layouts.history.receipt', compact('order', 'receipt'));
-
-        } catch (\Exception $e) {
-            // Log Error สำหรับการตรวจสอบบน Server
-           Log::error('Receipt generation failed for order ID ' . $id . ': ' . $e->getMessage());
-
-            // ส่ง Error Message กลับไปที่หน้า View
-            return redirect()->back()->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
-        }
-    }
+   
      public function store(Request $request)
     {
         // 1. ตรวจสอบข้อมูลเบื้องต้น
@@ -194,7 +160,7 @@ class OrderController extends Controller
         }
 
         try {
-            $order = Order::findOrFail($request->order_id);
+            $order = Order::with('details.product', 'promotion')->findOrFail($request->order_id);
 
             if ($request->action === 'accept') {
                 $order->em_id = $request->em_id;
@@ -205,6 +171,21 @@ class OrderController extends Controller
             if ($request->action === 'complete') {
                 $order->receive_date = Carbon::now();
                 $order->save();
+                
+                // --- เพิ่มส่วนสำหรับสร้างใบเสร็จอัตโนมัติ ---
+                $subtotal = $order->details->sum('pay_total');
+                $discount = $order->promotion->promo_discount ?? 0;
+                $netTotal = $subtotal - $discount;
+
+                Receipt::firstOrCreate(
+                    ['order_id' => $order->order_id],
+                    [
+                        're_date' => $order->receive_date,
+                        'price_total' => $netTotal,
+                    ]
+                );
+                // --------------------------------------------------
+
                 return response()->json(['status' => 'success', 'message' => 'Order completed successfully']);
             }
         } catch (\Exception $e) {
@@ -212,6 +193,18 @@ class OrderController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Failed to update order status'], 500);
         }
     }
+      public function generateReceipt($id)
+    {
+        $order = Order::with(['customer', 'employee', 'promotion', 'details.product'])->findOrFail($id);
+        $receipt = $order->receipt; // ใช้ relationship ที่มีอยู่แล้ว
+
+        if (!$receipt) {
+             return redirect()->back()->with('error', 'ไม่พบข้อมูลใบเสร็จ');
+        }
+
+        return view('layouts.history.receipt', compact('order', 'receipt'));
+    }
+
      public function getCustomerHistory($cusId)
     {
   
