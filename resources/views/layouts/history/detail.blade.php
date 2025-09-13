@@ -155,6 +155,19 @@
         @endif
     </div>
 </div>
+<script>
+    // ตรวจสอบว่ามีข้อความ Error ใน Session หรือไม่
+    const errorMessage = "{{ session('error') }}";
+    
+    // ถ้ามีข้อความ Error ให้แสดงใน Console
+    if (errorMessage) {
+        console.error('Application Error:', errorMessage);
+        // สามารถเพิ่ม alert เพื่อแจ้งผู้ใช้ก็ได้
+        // alert(errorMessage);
+    }
+</script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+</body>
+</html>
 </body>
 </html>
