@@ -16,7 +16,7 @@ return new class extends Migration
         $table->string('promo_name', 50);
         $table->decimal('promo_discount', 10, 2);
         $table->date('promo_start');   
-        $table->date('promo_end');     
+        $table->date('promo_end');
 
     });
 }

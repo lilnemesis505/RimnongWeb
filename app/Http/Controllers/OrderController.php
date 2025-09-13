@@ -11,8 +11,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
-
-// เพิ่ม use ImageKit
 use ImageKit\ImageKit;
 
 class OrderController extends Controller
@@ -29,7 +27,6 @@ class OrderController extends Controller
         $order = Order::findOrFail($id);
 
         if (is_null($order->em_id)) {
-            // ลบรูปจาก ImageKit ถ้ามี slips_id
             if (!empty($order->slips_id)) {
                 $imageKit = new ImageKit(
                     env('IMAGEKIT_PUBLIC_KEY'),
@@ -39,10 +36,9 @@ class OrderController extends Controller
                 try {
                     $imageKit->deleteFile($order->slips_id);
                 } catch (\Exception $e) {
-                    // สามารถ log error ได้ถ้าต้องการ
+                    Log::error('ImageKit delete failed: ' . $e->getMessage());
                 }
             }
-
             $order->delete();
             return redirect()->route('history.index')->with('success', 'ลบรายการสั่งซื้อเรียบร้อยแล้ว');
         }
@@ -50,10 +46,8 @@ class OrderController extends Controller
         return redirect()->route('history.index')->with('error', 'ไม่สามารถลบรายการที่ดำเนินการแล้วได้');
     }
 
-   
-     public function store(Request $request)
+    public function store(Request $request)
     {
-        // 1. ตรวจสอบข้อมูลเบื้องต้น
         $validator = Validator::make($request->all(), [
             'cus_id'      => 'required|integer|exists:customer,cus_id',
             'price_total' => 'required|numeric',
@@ -71,10 +65,8 @@ class OrderController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Order items are invalid.'], 422);
         }
 
-        // เริ่ม Transaction เพื่อความปลอดภัย
         DB::beginTransaction();
         try {
-            // 2. สร้าง Order หลัก
             $order = Order::create([
                 'cus_id'      => $request->cus_id,
                 'order_date'  => Carbon::now(),
@@ -83,7 +75,6 @@ class OrderController extends Controller
                 'remarks'     => $request->remarks ?? '',
             ]);
 
-            // 3. สร้าง Order Details
             foreach ($orderItems as $item) {
                 OrderDetail::create([
                     'order_id'   => $order->order_id,
@@ -94,7 +85,6 @@ class OrderController extends Controller
                 ]);
             }
 
-            // 4. อัปโหลดรูป Slip ไปที่ ImageKit
             $imageKit = new ImageKit(
                 env('IMAGEKIT_PUBLIC_KEY'),
                 env('IMAGEKIT_PRIVATE_KEY'),
@@ -118,22 +108,17 @@ class OrderController extends Controller
                 throw new \Exception('ImageKit upload failed.');
             }
             
-            // ยืนยัน Transaction
             DB::commit();
 
             return response()->json(['status' => 'success', 'order_id' => $order->order_id], 201);
 
         } catch (\Exception $e) {
-            // หากมีข้อผิดพลาด ให้ Rollback และ Log ไว้
             DB::rollBack();
             Log::error('Order creation failed: ' . $e->getMessage());
             return response()->json(['status' => 'error', 'message' => 'Failed to save order.'], 500);
         }
     }
 
-    /**
-     * ดึงข้อมูลออเดอร์ที่กำลังรอ (จาก fetch_orders.php)
-     */
     public function getPendingOrders()
     {
         $orders = Order::with(['customer:cus_id,fullname', 'promotion:promo_id,promo_name', 'details.product:pro_id,pro_name'])
@@ -144,9 +129,6 @@ class OrderController extends Controller
         return response()->json($orders);
     }
     
-    /**
-     * อัปเดตสถานะออเดอร์ (จาก complete_order.php)
-     */
     public function updateStatus(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -172,19 +154,8 @@ class OrderController extends Controller
                 $order->receive_date = Carbon::now();
                 $order->save();
                 
-                // --- เพิ่มส่วนสำหรับสร้างใบเสร็จอัตโนมัติ ---
-                $subtotal = $order->details->sum('pay_total');
-                $discount = $order->promotion->promo_discount ?? 0;
-                $netTotal = $subtotal - $discount;
-
-                Receipt::firstOrCreate(
-                    ['order_id' => $order->order_id],
-                    [
-                        're_date' => $order->receive_date,
-                        'price_total' => $netTotal,
-                    ]
-                );
-                // --------------------------------------------------
+                // ตรวจสอบและสร้างใบเสร็จสำหรับรายการที่เพิ่งทำเสร็จ
+                $this->createReceiptForCompletedOrder($order);
 
                 return response()->json(['status' => 'success', 'message' => 'Order completed successfully']);
             }
@@ -193,31 +164,72 @@ class OrderController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Failed to update order status'], 500);
         }
     }
-      public function generateReceipt($id)
+    private function createReceiptForCompletedOrder(Order $order)
+    {
+        // ตรวจสอบว่ามีข้อมูลใน receipt แล้วหรือไม่
+        if (!$order->receipt) {
+            $subtotal = $order->details->sum('pay_total');
+            $discount = $order->promotion->promo_discount ?? 0;
+            $netTotal = $subtotal - $discount;
+
+            Receipt::firstOrCreate(
+                ['order_id' => $order->order_id],
+                [
+                    're_date' => $order->receive_date,
+                    'price_total' => $netTotal,
+                ]
+            );
+        }
+    }
+
+
+    public function generateReceipt($id)
     {
         $order = Order::with(['customer', 'employee', 'promotion', 'details.product'])->findOrFail($id);
-        $receipt = $order->receipt; // ใช้ relationship ที่มีอยู่แล้ว
+        $receipt = $order->receipt;
 
         if (!$receipt) {
              return redirect()->back()->with('error', 'ไม่พบข้อมูลใบเสร็จ');
         }
+        Log::info('Accessed existing receipt for Order ID: ' . $id);
 
         return view('layouts.history.receipt', compact('order', 'receipt'));
     }
-
-     public function getCustomerHistory($cusId)
+      public function generateMissingReceipts()
     {
-  
+        $completedOrders = Order::whereNotNull('em_id')
+                                ->whereNotNull('receive_date')
+                                ->get();
+        
+        $missingReceiptsCount = 0;
+        foreach ($completedOrders as $order) {
+            try {
+                if (!$order->receipt) {
+                    $this->createReceiptForCompletedOrder($order);
+                    $missingReceiptsCount++;
+                }
+            } catch (\Exception $e) {
+                Log::error('Error generating missing receipt for order ID ' . $order->order_id . ': ' . $e->getMessage());
+            }
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => "Generated {$missingReceiptsCount} missing receipts."
+        ]);
+    }
+
+    public function getCustomerHistory($cusId)
+    {
         $orders = Order::with([
-                'customer:cus_id,fullname', // ดึงเฉพาะ id และ fullname จากตาราง customer
-                'promotion:promo_id,promo_name', // ดึงเฉพาะ id และ name จากตาราง promotion
-                'details.product:pro_id,pro_name' // ดึง details และ product ที่ผูกกันอยู่
+                'customer:cus_id,fullname',
+                'promotion:promo_id,promo_name',
+                'details.product:pro_id,pro_name'
             ])
-            ->where('cus_id', $cusId) // ค้นหาเฉพาะออเดอร์ของลูกค้ารายนี้
-            ->orderBy('order_date', 'desc') // จัดเรียงตามวันที่ล่าสุดก่อน
+            ->where('cus_id', $cusId)
+            ->orderBy('order_date', 'desc')
             ->get();
 
         return response()->json($orders);
     }
 }
-

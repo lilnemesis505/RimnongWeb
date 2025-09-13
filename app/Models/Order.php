@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Receipt;
 
 class Order extends Model
 {
@@ -45,4 +46,9 @@ class Order extends Model
     {
         return $this->hasMany(OrderDetail::class, 'order_id', 'order_id');
     }
+    public function receipt()
+    {
+     return $this->hasOne(Receipt::class, 'order_id', 'order_id');
+    }
+
 }

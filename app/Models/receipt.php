@@ -18,4 +18,9 @@ class Receipt extends Model
         're_date',
         'price_total',
     ];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id', 'order_id');
+    }
 }

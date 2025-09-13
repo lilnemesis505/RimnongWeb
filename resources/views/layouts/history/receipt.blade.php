@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ใบเสร็จรับเงิน #{{ $receipt->re_id }}</title>
+    <title>ใบเสร็จรับเงิน #{{ $receipt->re_id ?? 'ไม่ระบุ' }}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
     <style>
@@ -22,7 +22,6 @@
             justify-content: space-between;
             margin-bottom: 5px;
         }
-        /* ซ่อนปุ่มและ sidebar เมื่อพิมพ์ */
         @media print {
             .no-print {
                 display: none !important;
@@ -76,7 +75,7 @@
                         <p class="text-muted mb-0">ใบเสร็จรับเงิน</p>
                         <hr class="my-2">
                         <p><strong>คำสั่งซื้อเลขที่:</strong> {{ $order->order_id ?? 'ไม่ระบุ' }}</p>
-                        <p><strong>วันที่:</strong> {{ $order->receive_date }}</p>
+                        <p><strong>วันที่:</strong> {{ $order->receive_date ?? 'ไม่ระบุ' }}</p>
                     </div>
 
                     <div class="receipt-body">

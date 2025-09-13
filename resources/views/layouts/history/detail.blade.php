@@ -34,14 +34,14 @@
                         </a>
                     </li>
                     <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                     @if(!is_null($order->receive_date))
-                      <li class="nav-item">
-                 <a href="{{ route('order.receipt', ['id' => $order->order_id]) }}" class="nav-link text-white">
-                      <i class="nav-icon fas fa-receipt"></i> <p>ใบเสร็จ</p>
-                        </a>
-                </li>
-             @endif
-                </ul>
+                        @if(!is_null($order->receive_date))
+                        <li class="nav-item">
+                            <a href="{{ route('order.receipt', ['id' => $order->order_id]) }}" class="nav-link text-white">
+                                <i class="nav-icon fas fa-receipt"></i> <p>ใบเสร็จ</p>
+                            </a>
+                        </li>
+                        @endif
+                    </ul>
                 </ul>
             </nav>
         </div>
@@ -110,13 +110,8 @@
                         <div class="d-flex justify-content-end">
                             <div class="col-md-4">
                                 @php
-                                    // คำนวณราคารวมของสินค้าทั้งหมดก่อนหักส่วนลด
                                     $subtotal = $order->details->sum('pay_total');
-
-                                    // ดึงส่วนลดจากโปรโมชั่น ถ้ามี
                                     $discount = $order->promotion->promo_discount ?? 0;
-
-                                    // คำนวณราคารวมสุทธิ
                                     $netTotal = $subtotal - $discount;
                                 @endphp
                                 <table class="table table-sm table-borderless">
@@ -146,7 +141,7 @@
             <i class="fas fa-arrow-left"></i> กลับ
         </a>
         
-        @if(is_null($order->em_id))
+        @if(is_null($order->receive_date))
             <form action="{{ route('order.destroy', ['id' => $order->order_id]) }}" method="POST" class="d-inline">
                 @csrf
                 @method('DELETE')
@@ -158,18 +153,12 @@
     </div>
 </div>
 <script>
-    // ตรวจสอบว่ามีข้อความ Error ใน Session หรือไม่
     const errorMessage = "{{ session('error') }}";
     
-    // ถ้ามีข้อความ Error ให้แสดงใน Console
     if (errorMessage) {
         console.error('Application Error:', errorMessage);
-        // สามารถเพิ่ม alert เพื่อแจ้งผู้ใช้ก็ได้
-        // alert(errorMessage);
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-</body>
-</html>
 </body>
 </html>
