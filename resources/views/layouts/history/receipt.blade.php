@@ -75,7 +75,7 @@
                         <h4 class="mb-0">ริมหนองคาเฟ่</h4>
                         <p class="text-muted mb-0">ใบเสร็จรับเงิน</p>
                         <hr class="my-2">
-                        <p><strong>คำสั่งซื้อเลขที่:</strong> {{ $order->order_id }}</p>
+                        <p><strong>คำสั่งซื้อเลขที่:</strong> {{ $order->order_id ?? 'ไม่ระบุ' }}</p>
                         <p><strong>วันที่:</strong> {{ $order->receive_date }}</p>
                     </div>
 

@@ -14,8 +14,6 @@ return new class extends Migration
             $table->timestamp('re_date')->useCurrent(); // วันที่ออกใบเสร็จ
             $table->decimal('price_total', 10, 2); // ราคารวมทั้งหมด
 
-            $table->timestamps();
-
             // Foreign key constraint
             $table->foreign('order_id')->references('order_id')->on('order')->onDelete('cascade');
         });
