@@ -33,13 +33,15 @@
                             <i class="nav-icon fas fa-dollar-sign "></i> <p>รายละเอียดการขาย</p>
                         </a>
                     </li>
-                    @if(!is_null($order->receive_date,))
-                    <li class="nav-item">
-                        <a href="{{ route('order.receipt', ['id' => $order->order_id]) }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-receipt"></i> <p>ใบเสร็จ</p>
+                    <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+                     @if(!is_null($order->receive_date))
+                      <li class="nav-item">
+                 <a href="{{ route('order.receipt', ['id' => $order->order_id]) }}" class="nav-link text-white">
+                      <i class="nav-icon fas fa-receipt"></i> <p>ใบเสร็จ</p>
                         </a>
-                    </li>
-                    @endif
+                </li>
+             @endif
+                </ul>
                 </ul>
             </nav>
         </div>
