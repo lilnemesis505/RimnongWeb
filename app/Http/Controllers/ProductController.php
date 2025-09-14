@@ -174,28 +174,31 @@ class ProductController extends Controller
 
         return redirect()->route('product.index')->with('success', 'ลบสินค้าสำเร็จแล้ว');
     }
-    public function indexApi()
+   public function indexApi()
     {
         $today = Carbon::today();
         
-        // Eager load the active promotion for each product
         $products = Product::with(['promotions' => function ($query) use ($today) {
             $query->where('promo_start', '<=', $today)
                   ->where('promo_end', '>=', $today)
-                  ->orderBy('promo_discount', 'desc') // Get the best discount
+                  ->orderBy('promo_discount', 'desc')
                   ->limit(1);
         }])->get();
 
-        // Transform the data to include special_price and promo_name
         $transformedProducts = $products->map(function ($product) {
             $activePromotion = $product->promotions->first();
             
             $specialPrice = null;
             $promoName = null;
+            $promoId = null;
+            $promoDiscount = null;
 
             if ($activePromotion) {
                 $specialPrice = $product->price - $activePromotion->promo_discount;
                 $promoName = $activePromotion->promo_name;
+                // ✅ [FIX] Pass promo_id and promo_discount to the response
+                $promoId = $activePromotion->promo_id;
+                $promoDiscount = $activePromotion->promo_discount;
             }
 
             return [
@@ -207,6 +210,9 @@ class ProductController extends Controller
                 'image_id' => $product->image_id,
                 'special_price' => $specialPrice,
                 'promo_name' => $promoName,
+                // ✅ [FIX] Add new fields to the JSON response
+                'promo_id' => $promoId,
+                'promo_discount' => $promoDiscount,
             ];
         });
 
