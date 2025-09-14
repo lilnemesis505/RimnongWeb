@@ -22,6 +22,7 @@ class CreateOrderTable extends Migration
             $table->unsignedBigInteger('promo_id')->nullable();
             $table->decimal('price_total', 10, 2);
             $table->string('remarks', 255)->nullable();
+            $table->datetime('grab_date')->nullable();
             $table->string('slips_url', 255)->nullable();
             $table->string('slips_id', 255)->nullable();
 

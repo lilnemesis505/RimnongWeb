@@ -13,7 +13,13 @@ class Promotion extends Model
 
         'promo_name',
         'promo_discount',
+        'pro_id',
         'promo_start',
         'promo_end',
     ];
+   
+    public function product()
+    {
+        return $this->belongsTo(Product::class, 'pro_id','pro_id');
+    }
 }

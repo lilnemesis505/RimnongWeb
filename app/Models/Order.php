@@ -22,6 +22,7 @@ class Order extends Model
         'price_total',
         'receive_date',
         'remarks',
+        'grab_date',
         'slips_url',
         'slips_id'
     ];
