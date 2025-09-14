@@ -6,45 +6,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
     <style>
-        .info-box {
-            display: flex;
-            align-items: center;
-        }
-        .info-box .info-box-icon {
-            font-size: 2rem;
-            width: 70px;
-            height: 70px;
-            border-radius: 0.25rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .info-box .info-box-content {
-            flex: 1;
-            padding: 0 10px;
-        }
-        .info-box .info-box-text {
-            display: block;
-            font-size: 1rem;
-            font-weight: 400;
-        }
-        .info-box .info-box-number {
-            display: block;
-            font-size: 1.5rem;
-            font-weight: 700;
-        }
-        /* Style for the new collapsible menu */
-        .sidebar .nav-item.has-treeview > .nav-link {
-            border-radius: 5px;
-        }
-        .sidebar .nav-treeview .nav-item .nav-link {
-            padding-left: 30px;
-            font-size: 0.95rem;
-        }
+        .info-box .info-box-icon { font-size: 2rem; width: 70px; height: 70px; }
+        .card-title a { font-size: 0.8rem; vertical-align: middle; margin-left: 8px; }
     </style>
 </head>
 <body class="hold-transition sidebar-mini layout-fixed layout-footer-fixed">
 <div class="wrapper">
+    {{-- Navbar and Sidebar remain the same --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <ul class="navbar-nav">
             <li class="nav-item ">
@@ -134,7 +102,8 @@
         <section class="content pt-4">
             <div class="container-fluid">
                 <h4 class="mb-4">สรุปภาพรวม</h4>
-                <div class="row">
+                {{-- Info Boxes remain the same --}}
+                 <div class="row">
                     <div class="col-lg-3 col-6">
                         <div class="info-box bg-info">
                             <span class="info-box-icon"><i class="fas fa-users"></i></span>
@@ -176,29 +145,29 @@
                     <div class="col-md-6">
                         <div class="card card-warning card-outline">
                             <div class="card-header">
-                                <h3 class="card-title">วัตถุดิบใกล้หมดอายุ</h3>
+                                <h3 class="card-title">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    วัตถุดิบใกล้หมดอายุ
+                                    <a href="{{ route('stock.index') }}" class="text-sm">(จัดการสต็อก)</a>
+                                </h3>
                             </div>
                             <div class="card-body p-0">
                                 <ul class="products-list product-list-in-card pl-2 pr-2">
                                     @forelse($expiringStock as $stock)
                                     <li class="item">
-                                        <div class="product-img">
-                                            <i class="fas fa-box text-warning"></i>
-                                        </div>
-                                        <div class="product-info">
+                                        <div class="product-info ml-2">
                                             <a href="{{ route('stock.index') }}" class="product-title">{{ $stock->mat_name }}
                                                 <span class="badge badge-warning float-right">{{ $stock->remain }} ชิ้น</span>
                                             </a>
                                             <span class="product-description">
-                                                เหลืออีก {{ Carbon::now()->diffInDays($stock->exp_date, false) }} วัน
+                                                {{-- ใช้ค่าที่คำนวณมาแล้วจาก Controller --}}
+                                                จะหมดอายุในอีก: <strong>{{ $stock->days_to_expire }} วัน</strong>
                                             </span>
                                         </div>
                                     </li>
                                     @empty
-                                    <li class="item text-center">
-                                        <div class="product-info mt-2 mb-2">
-                                            <span>ไม่มีวัตถุดิบใกล้หมดอายุ</span>
-                                        </div>
+                                    <li class="item text-center p-3">
+                                        <span><i class="fas fa-check-circle text-success"></i> ไม่มีวัตถุดิบใกล้หมดอายุ</span>
                                     </li>
                                     @endforelse
                                 </ul>
@@ -208,16 +177,17 @@
                     <div class="col-md-6">
                         <div class="card card-danger card-outline">
                             <div class="card-header">
-                                <h3 class="card-title">โปรโมชั่นที่ใช้งานอยู่</h3>
+                                <h3 class="card-title">
+                                    <i class="fas fa-tags"></i>
+                                    โปรโมชั่นที่ใช้งานอยู่
+                                    <a href="{{ route('promotion.index') }}" class="text-sm">(จัดการโปรโมชั่น)</a>
+                                </h3>
                             </div>
                             <div class="card-body p-0">
                                 <ul class="products-list product-list-in-card pl-2 pr-2">
                                     @forelse($activePromotions as $promo)
                                     <li class="item">
-                                        <div class="product-img">
-                                            <i class="fas fa-ticket-alt text-danger"></i>
-                                        </div>
-                                        <div class="product-info">
+                                        <div class="product-info ml-2">
                                             <a href="{{ route('promotion.index') }}" class="product-title">{{ $promo->promo_name }}
                                                 <span class="badge badge-danger float-right">เหลืออีก {{ $promo->days_left }} วัน</span>
                                             </a>
@@ -227,10 +197,8 @@
                                         </div>
                                     </li>
                                     @empty
-                                    <li class="item text-center">
-                                        <div class="product-info mt-2 mb-2">
-                                            <span>ไม่มีโปรโมชั่นที่ใช้งานอยู่</span>
-                                        </div>
+                                    <li class="item text-center p-3">
+                                        <span><i class="fas fa-info-circle text-secondary"></i> ไม่มีโปรโมชั่นที่ใช้งานอยู่</span>
                                     </li>
                                     @endforelse
                                 </ul>
@@ -241,32 +209,33 @@
             </div>
         </section>
     </div>
-</div>
-<footer class="main-footer bg-secondary text-center fixed-bottom">
-    <strong>&copy; {{ date('Y') }} ร้านริมหนอง คาเฟ่ จังหวัดเชียงใหม่.</strong> กินกาแฟให้อร่อย
-</footer>
+    <footer class="main-footer bg-secondary text-center">
+        <strong>&copy; {{ date('Y') }} ร้านริมหนอง คาเฟ่ จังหวัดเชียงใหม่.</strong> กินกาแฟให้อร่อย
+    </footer>
 
-<div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered" role="document">
-    <div class="modal-content">
-      <div class="modal-header bg-warning">
-        <h5 class="modal-title" id="logoutModalLabel">ยืนยันการออกจากระบบ</h5>
-        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
-      </div>
-      <div class="modal-body">
-        คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="btn btn-danger">ออกจากระบบ</button>
-        </form>
+    {{-- Logout Modal remains the same --}}
+    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title" id="logoutModalLabel">ยืนยันการออกจากระบบ</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            คุณแน่ใจหรือไม่ว่าต้องการออกจากระบบ?
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">ยกเลิก</button>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="btn btn-danger">ออกจากระบบ</button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>

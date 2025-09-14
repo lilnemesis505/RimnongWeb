@@ -15,6 +15,7 @@ class StockMatController extends Controller
     {
         $stock_mats = StockMat::with('type')->paginate(20);
         return view('layouts.stock.stock', compact('stock_mats'));
+        
     }
 
     public function create()

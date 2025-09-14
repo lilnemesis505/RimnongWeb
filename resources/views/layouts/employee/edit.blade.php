@@ -106,15 +106,6 @@
 
                     <button type="submit" class="btn btn-primary">บันทึกการแก้ไข</button>
                     <a href="{{ route('employee.index') }}" class="btn btn-secondary">ยกเลิก</a>
-                </form>
-                 <form action="{{ route('employee.destroy', $employee->em_id) }}" method="POST"
-              onsubmit="return confirm('คุณแน่ใจว่าต้องการลบข้อมูลนี้หรือไม่?')">
-            @csrf
-            @method('DELETE')
-            <button type="submit" class="btn btn-danger">
-                <i class="fas fa-trash-alt"></i> ลบข้อมูล
-            </button>
-        </form>
             </div>
         </div>
     </div>
