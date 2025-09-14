@@ -26,5 +26,9 @@ class Product extends Model
     {
         return $this->belongsTo(Protype::class, 'type_id');
     }
+    public function promotions()
+{
+    return $this->hasMany(Promotion::class, 'pro_id', 'pro_id');
+}
    
 }

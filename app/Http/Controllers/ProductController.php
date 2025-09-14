@@ -7,6 +7,7 @@ use App\Models\Protype;
 use Illuminate\Http\Request;
 use ImageKit\ImageKit;
 use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
 
 class ProductController extends Controller
 {
@@ -173,14 +174,43 @@ class ProductController extends Controller
 
         return redirect()->route('product.index')->with('success', 'ลบสินค้าสำเร็จแล้ว');
     }
-     public function indexApi()
+    public function indexApi()
     {
-        // 1. ดึงข้อมูลสินค้าทั้งหมดจากฐานข้อมูลด้วย Eloquent
-        $products = Product::all();
+        $today = Carbon::today();
+        
+        // Eager load the active promotion for each product
+        $products = Product::with(['promotions' => function ($query) use ($today) {
+            $query->where('promo_start', '<=', $today)
+                  ->where('promo_end', '>=', $today)
+                  ->orderBy('promo_discount', 'desc') // Get the best discount
+                  ->limit(1);
+        }])->get();
 
-        // 2. ส่งข้อมูลกลับไปในรูปแบบ JSON
-        // Laravel จะจัดการแปลงข้อมูลเป็น JSON ให้โดยอัตโนมัติ
-        return response()->json($products);
+        // Transform the data to include special_price and promo_name
+        $transformedProducts = $products->map(function ($product) {
+            $activePromotion = $product->promotions->first();
+            
+            $specialPrice = null;
+            $promoName = null;
+
+            if ($activePromotion) {
+                $specialPrice = $product->price - $activePromotion->promo_discount;
+                $promoName = $activePromotion->promo_name;
+            }
+
+            return [
+                'pro_id' => $product->pro_id,
+                'pro_name' => $product->pro_name,
+                'price' => $product->price,
+                'type_id' => $product->type_id,
+                'image' => $product->image,
+                'image_id' => $product->image_id,
+                'special_price' => $specialPrice,
+                'promo_name' => $promoName,
+            ];
+        });
+
+        return response()->json($transformedProducts);
     }
 }
 

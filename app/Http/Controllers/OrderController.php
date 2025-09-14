@@ -15,6 +15,8 @@ use ImageKit\ImageKit;
 
 class OrderController extends Controller
 {
+    // ... other methods like show(), destroy() remain the same ...
+
     public function show($id)
     {
         $order = Order::with(['customer', 'employee', 'promotion', 'details.product'])->findOrFail($id);
@@ -54,6 +56,7 @@ class OrderController extends Controller
             'order_items' => 'required|string',
             'promo_id'    => 'nullable|integer|exists:promotion,promo_id',
             'slip_image'  => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'pickup_time' => 'nullable|date_format:H:i', // Validate format HH:mm
         ]);
         
         if ($validator->fails()) {
@@ -67,9 +70,23 @@ class OrderController extends Controller
 
         DB::beginTransaction();
         try {
+            // By default, order_date is now. grab_date is null.
+            $orderDate = Carbon::now();
+            $grabDate = null;
+
+            // ✅ [FIX] If a pickup_time is provided, this is a pre-order.
+            if ($request->filled('pickup_time')) {
+                // Create a Carbon instance from the pickup time
+                $pickupTime = Carbon::createFromFormat('H:i', $request->pickup_time);
+                
+                // Subtract 10 minutes for preparation time and set it as the order_date
+                $orderDate = $pickupTime->subMinutes(10);
+            }
+
             $order = Order::create([
                 'cus_id'      => $request->cus_id,
-                'order_date'  => Carbon::now(),
+                'order_date'  => $orderDate,
+                'grab_date'   => $grabDate, // This will be handled by staff
                 'promo_id'    => $request->promo_id,
                 'price_total' => $request->price_total,
                 'remarks'     => $request->remarks ?? '',
@@ -85,6 +102,7 @@ class OrderController extends Controller
                 ]);
             }
 
+            // ImageKit upload logic
             $imageKit = new ImageKit(
                 env('IMAGEKIT_PUBLIC_KEY'),
                 env('IMAGEKIT_PRIVATE_KEY'),
@@ -119,6 +137,7 @@ class OrderController extends Controller
         }
     }
 
+    // ... other methods like getPendingOrders(), updateStatus() etc. remain the same ...
     public function getPendingOrders()
     {
         $orders = Order::with(['customer:cus_id,fullname', 'promotion:promo_id,promo_name', 'details.product:pro_id,pro_name'])
@@ -154,7 +173,6 @@ class OrderController extends Controller
                 $order->receive_date = Carbon::now();
                 $order->save();
                 
-                // ตรวจสอบและสร้างใบเสร็จสำหรับรายการที่เพิ่งทำเสร็จ
                 $this->createReceiptForCompletedOrder($order);
 
                 return response()->json(['status' => 'success', 'message' => 'Order completed successfully']);
@@ -166,7 +184,6 @@ class OrderController extends Controller
     }
     private function createReceiptForCompletedOrder(Order $order)
     {
-        // ตรวจสอบว่ามีข้อมูลใน receipt แล้วหรือไม่
         if (!$order->receipt) {
             $subtotal = $order->details->sum('pay_total');
             $discount = $order->promotion->promo_discount ?? 0;
@@ -195,29 +212,6 @@ class OrderController extends Controller
 
         return view('layouts.history.receipt', compact('order', 'receipt'));
     }
-      public function generateMissingReceipts()
-    {
-        $completedOrders = Order::whereNotNull('em_id')
-                                ->whereNotNull('receive_date')
-                                ->get();
-        
-        $missingReceiptsCount = 0;
-        foreach ($completedOrders as $order) {
-            try {
-                if (!$order->receipt) {
-                    $this->createReceiptForCompletedOrder($order);
-                    $missingReceiptsCount++;
-                }
-            } catch (\Exception $e) {
-                Log::error('Error generating missing receipt for order ID ' . $order->order_id . ': ' . $e->getMessage());
-            }
-        }
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => "Generated {$missingReceiptsCount} missing receipts."
-        ]);
-    }
 
     public function getCustomerHistory($cusId)
     {
@@ -233,3 +227,4 @@ class OrderController extends Controller
         return response()->json($orders);
     }
 }
+
