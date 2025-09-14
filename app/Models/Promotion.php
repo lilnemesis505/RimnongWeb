@@ -10,7 +10,6 @@ class Promotion extends Model
     public $timestamps = false;
     protected $table = 'promotion';
     protected $fillable = [
-
         'promo_name',
         'promo_discount',
         'pro_id',
@@ -21,5 +20,9 @@ class Promotion extends Model
     public function product()
     {
         return $this->belongsTo(Product::class, 'pro_id','pro_id');
+    }
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'order_promotion', 'promo_id', 'order_id');
     }
 }

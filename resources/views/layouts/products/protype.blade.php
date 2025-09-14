@@ -100,7 +100,6 @@
                             <tr>
                                 <th style="width: 10%">#</th>
                                 <th>ชื่อประเภทสินค้า</th>
-                                <th style="width: 20%" class="text-center">จัดการ</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -109,13 +108,6 @@
                                     <td>{{ $index + 1 }}</td>
                                     <td>{{ $protype->type_name }}</td>
                                     <td class="text-center">
-                                        <form action="{{ route('protype.delete', $protype->type_id) }}" method="POST" onsubmit="return confirm('คุณแน่ใจว่าต้องการลบ?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">
-                                                <i class="fas fa-trash-alt"></i> ลบ
-                                            </button>
-                                        </form>
                                     </td>
                                 </tr>
                             @empty

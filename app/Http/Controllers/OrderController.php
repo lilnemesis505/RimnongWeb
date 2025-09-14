@@ -54,9 +54,9 @@ class OrderController extends Controller
             'cus_id'      => 'required|integer|exists:customer,cus_id',
             'price_total' => 'required|numeric',
             'order_items' => 'required|string',
-            'promo_id'    => 'nullable|integer|exists:promotion,promo_id',
+            'promo_ids'   => 'nullable|string', // Expect a JSON string of an array
             'slip_image'  => 'required|image|mimes:jpeg,png,jpg|max:2048',
-            'pickup_time' => 'nullable|date_format:H:i', // Validate format HH:mm
+            'pickup_time' => 'nullable|date_format:H:i',
         ]);
         
         if ($validator->fails()) {
@@ -68,29 +68,33 @@ class OrderController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Order items are invalid.'], 422);
         }
 
+        $promoIds = $request->filled('promo_ids') ? json_decode($request->promo_ids, true) : [];
+        if (!is_array($promoIds)) {
+             return response()->json(['status' => 'error', 'message' => 'Promo IDs are invalid.'], 422);
+        }
+
+
         DB::beginTransaction();
         try {
-            // By default, order_date is now. grab_date is null.
             $orderDate = Carbon::now();
-            $grabDate = null;
-
-            // ✅ [FIX] If a pickup_time is provided, this is a pre-order.
             if ($request->filled('pickup_time')) {
-                // Create a Carbon instance from the pickup time
                 $pickupTime = Carbon::createFromFormat('H:i', $request->pickup_time);
-                
-                // Subtract 10 minutes for preparation time and set it as the order_date
                 $orderDate = $pickupTime->subMinutes(10);
             }
 
+            // Create the order without promo_id
             $order = Order::create([
                 'cus_id'      => $request->cus_id,
                 'order_date'  => $orderDate,
-                'grab_date'   => $grabDate, // This will be handled by staff
-                'promo_id'    => $request->promo_id,
                 'price_total' => $request->price_total,
                 'remarks'     => $request->remarks ?? '',
+                'grab_date'   => null,
             ]);
+
+            // Attach all promotions to the order via the pivot table
+            if (!empty($promoIds)) {
+                $order->promotions()->attach($promoIds);
+            }
 
             foreach ($orderItems as $item) {
                 OrderDetail::create([
@@ -136,7 +140,6 @@ class OrderController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Failed to save order.'], 500);
         }
     }
-
     // ... other methods like getPendingOrders(), updateStatus() etc. remain the same ...
     public function getPendingOrders()
     {
