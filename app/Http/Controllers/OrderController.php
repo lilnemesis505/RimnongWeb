@@ -15,12 +15,11 @@ use ImageKit\ImageKit;
 
 class OrderController extends Controller
 {
-    // ... other methods like show(), destroy() remain the same ...
-
-    public function show($id)
+   public function show(string $id)
     {
-        $order = Order::with(['customer', 'employee', 'promotion', 'details.product'])->findOrFail($id);
-        
+
+        $order = Order::with(['customer', 'employee', 'details.product', 'promotions'])->findOrFail($id);
+
         return view('layouts.history.detail', compact('order'));
     }
 
@@ -47,6 +46,7 @@ class OrderController extends Controller
 
         return redirect()->route('history.index')->with('error', 'ไม่สามารถลบรายการที่ดำเนินการแล้วได้');
     }
+
 
     public function store(Request $request)
     {
@@ -141,50 +141,76 @@ class OrderController extends Controller
         }
     }
     // ... other methods like getPendingOrders(), updateStatus() etc. remain the same ...
-    public function getPendingOrders()
-    {
-        $orders = Order::with(['customer:cus_id,fullname', 'promotion:promo_id,promo_name', 'details.product:pro_id,pro_name'])
-            ->whereNull('receive_date')
-            ->orderBy('order_date', 'asc')
-            ->get();
+   public function getPendingOrders()
+{
+    $orders = Order::with([
+        'customer:cus_id,fullname', 
+        'promotions:promo_id,promo_name',
+        'details.product:pro_id,pro_name',
+        'employee:em_id,em_name' // ✅ เพิ่มบรรทัดนี้เข้าไป
+    ])
+    ->whereNull('grab_date') 
+    ->orderBy('order_date', 'asc')
+    ->get();
             
-        return response()->json($orders);
-    }
+    return response()->json($orders);
+}
     
-    public function updateStatus(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'order_id' => 'required|integer|exists:order,order_id',
-            'action'   => 'required|string|in:accept,complete',
-            'em_id'    => 'nullable|integer|exists:employee,em_id',
-        ]);
+     public function updateStatus(Request $request)
+{
+    $validated = $request->validate([
+        'order_id' => 'required|integer|exists:order,order_id',
+        'action' => 'required|string|in:accept,complete,pickup',
+        'em_id' => 'required|integer|exists:employee,em_id',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'message' => 'Invalid data'], 422);
-        }
+    $order = Order::find($validated['order_id']);
 
-        try {
-            $order = Order::with('details.product', 'promotion')->findOrFail($request->order_id);
-
-            if ($request->action === 'accept') {
-                $order->em_id = $request->em_id;
-                $order->save();
-                return response()->json(['status' => 'success', 'message' => 'Order accepted successfully']);
+    // ✅ [REVISED LOGIC] ปรับปรุงโค้ดทั้งหมดด้านล่าง
+    switch ($validated['action']) {
+        case 'accept':
+            if (is_null($order->em_id)) {
+                $order->em_id = $validated['em_id'];
+                $message = 'รับออเดอร์ #${order_id} สำเร็จ';
+                $status = 'success';
+            } else {
+                // ถ้ามี em_id อยู่แล้ว (คนอื่นรับไปแล้ว)
+                $message = 'ออเดอร์ #${order_id} ถูกรับโดยพนักงานคนอื่นแล้ว';
+                $status = 'error'; // ส่งสถานะ error กลับไป
             }
-            
-            if ($request->action === 'complete') {
-                $order->receive_date = Carbon::now();
-                $order->save();
-                
-                $this->createReceiptForCompletedOrder($order);
+            break;
+        
+        case 'complete':
+            $order->receive_date = Carbon::now();
+            $message = 'ทำรายการ #${order_id} เสร็จสิ้น';
+            $status = 'success';
 
-                return response()->json(['status' => 'success', 'message' => 'Order completed successfully']);
-            }
-        } catch (\Exception $e) {
-            Log::error('Order update failed: ' . $e->getMessage());
-            return response()->json(['status' => 'error', 'message' => 'Failed to update order status'], 500);
-        }
+            break;
+
+        case 'pickup':
+            $order->grab_date = Carbon::now();
+            $message = 'ลูกค้ารับสินค้า #${order_id} แล้ว';
+            $status = 'success';
+            break;
+
+        default:
+            $message = 'Action ไม่ถูกต้อง';
+            $status = 'error';
     }
+
+    // บันทึกเฉพาะเมื่อมีการเปลี่ยนแปลงและสถานะเป็น success
+    if ($status === 'success') {
+        $order->save();
+    }
+
+    // ถ้า status เป็น error ให้ส่ง http status code 409 (Conflict) กลับไป
+    $httpStatusCode = $status === 'success' ? 200 : 409;
+
+    return response()->json([
+        'status' => $status,
+        'message' => str_replace('${order_id}', $order->order_id, $message)
+    ], $httpStatusCode);
+}
     private function createReceiptForCompletedOrder(Order $order)
     {
         if (!$order->receipt) {
@@ -217,17 +243,17 @@ class OrderController extends Controller
     }
 
     public function getCustomerHistory($cusId)
-    {
-        $orders = Order::with([
-                'customer:cus_id,fullname',
-                'promotion:promo_id,promo_name',
-                'details.product:pro_id,pro_name'
-            ])
-            ->where('cus_id', $cusId)
-            ->orderBy('order_date', 'desc')
-            ->get();
+{
+    $orders = Order::with([
+            'promotions:promo_id,promo_name', 
+            'employee:em_id,em_name',         
+            'details.product:pro_id,pro_name'
+        ])
+        ->where('cus_id', $cusId)
+        ->orderBy('order_date', 'desc')
+        ->get();
 
-        return response()->json($orders);
-    }
+    return response()->json($orders);
+}
 }
 

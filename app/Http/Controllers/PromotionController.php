@@ -54,6 +54,16 @@ class PromotionController extends Controller
     // ... (ฟังก์ชัน check ไม่มีการเปลี่ยนแปลง)
     public function check(Request $request)
     {
-        // ... โค้ดเดิม ...
+    }
+    public function getActivePromotions()
+    {
+        $today = Carbon::today();
+
+        $activePromotions = Promotion::where('promo_start', '<=', $today)
+                                     ->where('promo_end', '>=', $today)
+                                     ->orderBy('promo_end', 'asc')
+                                     ->get();
+
+        return response()->json($activePromotions);
     }
 }

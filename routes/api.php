@@ -6,6 +6,7 @@ use App\Http\Controllers\PromotionController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\NotificationController;
 
 Route::post('/register', [CustomerController::class, 'register']);
 Route::get('/customer', [CustomerController::class, 'getCustomer']);
@@ -24,3 +25,7 @@ Route::get('/customers/{cusId}/history', [OrderController::class, 'getCustomerHi
 Route::get('/employees/{id}', [EmployeeController::class, 'showApi']);
 Route::get('/employees/{emId}/history', [EmployeeController::class, 'getOrderHistory']);
 Route::get('/products', [ProductController::class, 'indexApi']);
+
+//promotion 
+Route::get('/promotions/active', [PromotionController::class, 'getActivePromotions']);
+Route::get('/notifications', [NotificationController::class, 'getNotifications']);

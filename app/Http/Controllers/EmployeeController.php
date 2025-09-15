@@ -144,7 +144,7 @@ public function store(Request $request)
         // 2. ใช้ Eager Loading ดึงข้อมูลออเดอร์ที่เกี่ยวข้อง
         $orders = Order::with([
                 'customer:cus_id,fullname',
-                'promotion:promo_id,promo_name',
+                'promotions:promo_id,promo_name',
                 'details.product:pro_id,pro_name'
             ])
             ->where('em_id', $emId) // ค้นหาเฉพาะออเดอร์ของพนักงานคนนี้

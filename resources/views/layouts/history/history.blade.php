@@ -74,49 +74,55 @@
                 </tr>
             </thead>
             <tbody>
-    @foreach($orders as $index => $order)
-        <tr class="text-center">
-            <td>{{ $index + 1 }}</td>
-            <td>{{ $order->order_id }}</td>
-            <td>
-                @php
-                    $discount = $order->promotion->promo_discount ?? 0;
-                    $oldPrice = $order->price_total + $discount; // คำนวณราคาเดิม
-                    $netTotal = $order->price_total;
-                @endphp
-                @if($discount > 0)
-                    <del class="text-muted-del">{{ number_format($oldPrice, 2) }}</del><br>
-                    <strong>{{ number_format($netTotal, 2) }}</strong>
-                @else
-                    {{ number_format($netTotal, 2) }}
-                @endif
-            </td>
-            <td>{{ $order->order_date }}</td>
-            <td>
-                @if(is_null($order->em_id))
-                    <span class="badge badge-danger">ยังไม่ถูกรับรายการ</span>
-                @elseif(is_null($order->receive_date))
-                    <span class="badge badge-warning">กำลังดำเนินการ</span>
-                @else
-                    <span class="badge badge-success">สำเร็จรายการ</span>
-                @endif
-            </td>
-         <td>
-     @if(!empty($order->slips_url))
-    <a href="{{ $order->slips_url }}" target="_blank">
-        <img src="{{ $order->slips_url }}" alt="Slip" style="width: 50px;">
-    </a>
-@else
-    <span>ไม่มีสลิป</span>
-@endif
-</td>
-            <td>
-                <a href="{{ route('order.details', ['id' => $order->order_id]) }}" class="btn btn-info btn-sm">
-    <i class="fas fa-eye"></i> แสดงรายละเอียด
-</a>
-            </td>
-        </tr>
-    @endforeach
+                        @foreach($orders as $index => $order)
+                            <tr class="text-center">
+                                <td>{{ $orders->firstItem() + $index }}</td> <td>{{ $order->order_id }}</td>
+                                <td>
+                                    {{-- ✅ [FIX] แก้ไขตรรกะการคำนวณราคาทั้งหมด --}}
+                                    @php
+                                        // คำนวณส่วนลดทั้งหมดจากทุกโปรโมชั่นที่เกี่ยวข้องกับ Order นี้
+                                        $totalDiscount = $order->promotions->sum('promo_discount');
+                                        // price_total คือราคาสุทธิหลังหักส่วนลดแล้ว
+                                        $netTotal = $order->price_total;
+                                        // คำนวณราคาเต็มก่อนหักส่วนลด
+                                        $originalPrice = $netTotal + $totalDiscount;
+                                    @endphp
+
+                                    @if($totalDiscount > 0)
+                                        {{-- ถ้ามีส่วนลด ให้ขีดฆ่าราคาเต็ม และแสดงราคาสุทธิ --}}
+                                        <del class="text-muted-del">{{ number_format($originalPrice, 2) }}</del><br>
+                                        <strong>{{ number_format($netTotal, 2) }}</strong>
+                                    @else
+                                        {{-- ถ้าไม่มีส่วนลด ก็แสดงราคาปกติ --}}
+                                        <strong>{{ number_format($netTotal, 2) }}</strong>
+                                    @endif
+                                </td>
+                                <td>{{ \Carbon\Carbon::parse($order->order_date)->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    @if(is_null($order->em_id))
+                                        <span class="badge badge-danger">ยังไม่ถูกรับรายการ</span>
+                                    @elseif(is_null($order->receive_date))
+                                        <span class="badge badge-warning">กำลังดำเนินการ</span>
+                                    @else
+                                        <span class="badge badge-success">สำเร็จรายการ</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if(!empty($order->slips_url))
+                                        <a href="{{ $order->slips_url }}" target="_blank">
+                                            <img src="{{ $order->slips_url }}" alt="Slip" style="width: 50px; height: 50px; object-fit: cover;">
+                                        </a>
+                                    @else
+                                        <span>ไม่มีสลิป</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    <a href="{{ route('order.details', ['id' => $order->order_id]) }}" class="btn btn-info btn-sm"> <i class="fas fa-eye"></i> แสดงรายละเอียด
+                                    </a>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
 </tbody>
         </table>
         {{ $orders->links() }}
