@@ -52,13 +52,14 @@
                             <i class="nav-icon fas fa-dollar-sign "></i> <p>รายละเอียดการขาย</p>
                         </a>
                     </li>
-                    @if(!is_null($order->receive_date))
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white"> {{--  Route::get('order.receipt', ['id' => $order->order_id]) --}}
-                            <i class="nav-icon fas fa-receipt"></i> <p>ใบเสร็จ</p>
-                        </a>
-                    </li>
-                    @endif
+                   @if(!is_null($order->receive_date))
+<li class="nav-item">
+    {{-- ✅ แก้ไขลิงก์ให้ถูกต้อง --}}
+    <a href="{{ route('order.receipt', ['id' => $order->order_id]) }}" class="nav-link text-white"> 
+        <i class="nav-icon fas fa-receipt"></i> <p>ใบเสร็จ</p>
+    </a>
+</li>
+@endif
                 </ul>
             </nav>
         </div>

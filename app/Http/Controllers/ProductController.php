@@ -41,11 +41,13 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'pro_name' => 'required|string|max:50',
-            'price' => 'required|numeric',
-            'type_id' => 'required|integer',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
-        ]);
+        'pro_name' => 'required|string|max:50|unique:product,pro_name',
+        'price' => 'required|numeric',
+        'type_id' => 'required|integer',
+        'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg',
+    ], [
+    'pro_name.unique' => 'มีสินค้าชื่อ "' . $request->pro_name . '" อยู่ในระบบแล้ว',
+]);
 
         $data = $request->only('pro_name', 'price', 'type_id');
         $product = Product::create($data);
@@ -102,11 +104,13 @@ class ProductController extends Controller
     {
         // 1. Validate the request data
         $request->validate([
-            'pro_name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'type_id' => 'required|exists:protype,type_id',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png',
-        ]);
+    'pro_name' => 'required|string|max:255|unique:product,pro_name,' . $pro_id . ',pro_id',
+    'price' => 'required|numeric',
+    'type_id' => 'required|exists:protype,type_id',
+    'image' => 'nullable|image|mimes:jpg,jpeg,png',
+], [
+    'pro_name.unique' => 'มีสินค้าชื่อ "' . $request->pro_name . '" อยู่ในระบบแล้ว',
+]);
 
         $product = Product::findOrFail($pro_id);
 

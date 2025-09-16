@@ -76,10 +76,7 @@ Route::middleware('admin.auth')->group(function () {
 
     // reports
  Route::get('/salereport', [ReportController::class, 'saleReport'])->name('salereport.index');
-
-    Route::get('/expreport', function () {
-        return view('layouts.expreport');
-    })->name('expreport.index');
+Route::get('/report/bills', [ReportController::class, 'billReport'])->name('report.bills');
 
     // dashboard
 

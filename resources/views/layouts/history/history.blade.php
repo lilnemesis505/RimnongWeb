@@ -98,15 +98,17 @@
                                     @endif
                                 </td>
                                 <td>{{ \Carbon\Carbon::parse($order->order_date)->format('d/m/Y H:i') }}</td>
-                                <td>
-                                    @if(is_null($order->em_id))
-                                        <span class="badge badge-danger">ยังไม่ถูกรับรายการ</span>
-                                    @elseif(is_null($order->receive_date))
-                                        <span class="badge badge-warning">กำลังดำเนินการ</span>
-                                    @else
-                                        <span class="badge badge-success">สำเร็จรายการ</span>
-                                    @endif
-                                </td>
+                               <td>
+    @if(is_null($order->em_id))
+        <span class="badge badge-danger">ยังไม่ถูกรับรายการ</span>
+    @elseif(!is_null($order->grab_date))
+        <span class="badge badge-primary">ได้รับสินค้าแล้ว</span>
+    @elseif(!is_null($order->receive_date))
+        <span class="badge badge-success">เตรียมสินค้าเสร็จสิ้น</span>
+    @else
+        <span class="badge badge-warning">กำลังดำเนินการ</span>
+    @endif
+</td>
                                 <td>
                                     @if(!empty($order->slips_url))
                                         <a href="{{ $order->slips_url }}" target="_blank">

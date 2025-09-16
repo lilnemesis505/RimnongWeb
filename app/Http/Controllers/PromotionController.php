@@ -6,6 +6,7 @@ use App\Models\Product; // <-- 1. Import Model Product
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class PromotionController extends Controller
 {
@@ -23,27 +24,37 @@ class PromotionController extends Controller
         return view('layouts.promotion.add', compact('products'));
     }
 
-    public function store(Request $request)
-    {
-        // 4. กำหนดกฎและข้อความแจ้งเตือน
-        $rules = [
-            'promo_name'     => 'required|string|max:50',
-            'promo_discount' => 'required|numeric',
-            'promo_start'    => 'required|date',
-            'promo_end'      => 'required|date|after_or_equal:promo_start',
-            'pro_id'         => 'required|integer|exists:product,pro_id', // <-- เพิ่มกฎสำหรับ pro_id
-        ];
+   public function store(Request $request)
+{
+    $rules = [
+        'promo_name'     => 'required|string|max:50', // กฎของ promo_name กลับมาเป็นแบบพื้นฐาน
+        'promo_discount' => 'required|numeric',
+        'promo_start'    => 'required|date',
+        'promo_end'      => 'required|date|after_or_equal:promo_start',
 
-        $messages = [
-            'pro_id.required' => 'กรุณาเลือกสินค้าที่ร่วมรายการ',
-            'pro_id.exists'   => 'สินค้าที่เลือกไม่มีอยู่ในระบบ',
-        ];
+        // ✅ 1. เปลี่ยนกฎของ pro_id ให้ตรวจสอบความซ้ำในตาราง promotion
+        'pro_id' => [
+            'required',
+            'integer',
+            'exists:product,pro_id',
+            Rule::unique('promotion', 'pro_id'), // ตรวจสอบว่า pro_id นี้ต้องไม่ซ้ำในตาราง promotion
+        ],
+    ];
 
-        $request->validate($rules, $messages);
+    $messages = [
+        'pro_id.required' => 'กรุณาเลือกสินค้าที่ร่วมรายการ',
+        'pro_id.exists'   => 'สินค้าที่เลือกไม่มีอยู่ในระบบ',
+        // ✅ 2. เพิ่มข้อความแจ้งเตือนสำหรับ pro_id ที่ซ้ำกัน
+        'pro_id.unique'   => 'สินค้านี้มีโปรโมชั่นอื่นอยู่แล้ว ไม่สามารถเพิ่มซ้ำได้',
+    ];
 
-        Promotion::create($request->all());
-        return redirect()->back()->with('success', 'เพิ่มโปรโมชั่นเรียบร้อยแล้ว');
-    }
+    $request->validate($rules, $messages);
+
+    Promotion::create($request->all());
+
+    return redirect()->route('promotion.index')->with('success', 'เพิ่มโปรโมชั่นเรียบร้อยแล้ว');
+}
+  
 
     public function destroy($id)
     {

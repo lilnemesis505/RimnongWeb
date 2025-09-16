@@ -180,10 +180,12 @@ class OrderController extends Controller
             }
             break;
         
-        case 'complete':
-            $order->receive_date = Carbon::now();
-            $message = 'ทำรายการ #${order_id} เสร็จสิ้น';
-            $status = 'success';
+       case 'complete':
+    $order->receive_date = Carbon::now();
+    $this->createReceiptForCompletedOrder($order); // ✅ เรียกใช้ฟังก์ชันสร้างใบเสร็จ
+    $message = 'ทำรายการ #${order_id} เสร็จสิ้น';
+    $status = 'success';
+    break;
 
             break;
 
@@ -229,19 +231,25 @@ class OrderController extends Controller
     }
 
 
-    public function generateReceipt($id)
-    {
-        $order = Order::with(['customer', 'employee', 'promotion', 'details.product'])->findOrFail($id);
-        $receipt = $order->receipt;
+   public function generateReceipt($id)
+{
+    $order = Order::with(['customer', 'employee', 'promotions', 'details.product'])->findOrFail($id);
 
-        if (!$receipt) {
-             return redirect()->back()->with('error', 'ไม่พบข้อมูลใบเสร็จ');
-        }
-        Log::info('Accessed existing receipt for Order ID: ' . $id);
-
-        return view('layouts.history.receipt', compact('order', 'receipt'));
+    // ✅ ถ้าออเดอร์เสร็จแล้ว แต่ยังไม่มีใบเสร็จ ให้สร้างขึ้นมาใหม่
+    if ($order->receive_date && !$order->receipt) {
+        $this->createReceiptForCompletedOrder($order);
+        // ดึงข้อมูล order ใหม่อีกครั้งเพื่อให้ BIND relationship ของ receipt
+        $order = Order::with(['customer', 'employee', 'promotions', 'details.product', 'receipt'])->findOrFail($id);
     }
 
+    $receipt = $order->receipt;
+
+    if (!$receipt) {
+         return redirect()->back()->with('error', 'ไม่สามารถสร้างใบเสร็จได้เนื่องจากรายการยังไม่เสร็จสิ้น');
+    }
+
+    return view('layouts.history.receipt', compact('order', 'receipt'));
+}
     public function getCustomerHistory($cusId)
 {
     $orders = Order::with([

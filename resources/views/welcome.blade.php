@@ -69,8 +69,8 @@
                             <p>รายงาน <i class="right fas fa-angle-left"></i></p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link"><i class="nav-icon fas fa-chart-bar"></i> <p>รายงานการขาย</p></a></li>
-                            <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link"><i class="nav-icon fas fa-chart-bar"></i> <p>รายงานยอดขาย</p></a></li>
+                            <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link"><i class="nav-icon fas fa-chart-bar"></i> <p>รายงานการขายสินค้า</p></a></li>
+                            <li class="nav-item"><a href="{{ route('report.bills') }}" class="nav-link"><i class="nav-icon fas fa-chart-bar"></i> <p>รายงานยอดขาย</p></a></li>
                         </ul>
                         </ul>
                     </li>
