@@ -11,7 +11,7 @@ use App\Models\StockMat;
 use App\Models\Promotion;
 use Carbon\Carbon;
 use App\Models\Product;
-use App\Models\Receipt; // เพิ่ม Model Receipt เพื่อการคำนวณยอดขายที่แม่นยำ
+use App\Models\Receipt;
 
 class HomeController extends Controller
 {
