@@ -12,8 +12,7 @@
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
-    <aside class="main-sidebar sidebar-dark-primary elevation-4 min-vh-100">
-           <aside class="main-sidebar sidebar-dark-primary elevation-4 min-vh-100">
+    < <aside class="main-sidebar sidebar-dark-primary elevation-4 min-vh-100">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
         </a>
@@ -29,24 +28,19 @@
                 <hr class="bg-white">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                     <li class="nav-item">
-    <a href="{{ route('salereport.index') }}" class="nav-link text-white active">
-        <i class="nav-icon fas fa-chart-line"></i> <p>รายงานยอดขายสินค้า</p>
-    </a>
-</li>
-<li class="nav-item">
-    <a href="{{ route('report.bills') }}" class="nav-link text-white">
-        <i class="nav-icon fas fa-file-invoice-dollar"></i> <p>รายงานใบเสร็จ</p>
-    </a>
-</li>
-                            
+                        <a href="{{ route('salereport.index') }}" class="nav-link text-white active">
+                            <i class="nav-icon fas fa-chart-line"></i> <p>รายงานยอดขายสินค้า</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{{ route('report.bills') }}" class="nav-link text-white">
+                            <i class="nav-icon fas fa-file-invoice-dollar"></i> <p>รายงานใบเสร็จ</p>
                         </a>
                     </li>
                 </ul>
             </nav>
         </div>
     </aside>
-    </aside>
-
     <div class="content-wrapper">
         <section class="content pt-4">
             <div class="container-fluid">
@@ -129,19 +123,19 @@
         const chartLabels = @json($chartLabels);
         const chartDatasets = @json($chartDatasets);
 
-        // ✅ [ADD] ตรวจสอบว่ามีข้อมูลสำหรับกราฟหรือไม่
         if (chartDatasets.length > 0) {
-            function generateColor() {
-                const r = Math.floor(Math.random() * 200);
-                const g = Math.floor(Math.random() * 200);
-                const b = Math.floor(Math.random() * 200);
-                return `rgb(${r}, ${g}, ${b})`;
-            }
+            // ✅ [REVISED] เปลี่ยนจากการสุ่มสี เป็นการใช้ชุดสีที่กำหนดไว้
+            const colorPalette = [
+                '#3498db', '#e74c3c', '#2ecc71', '#9b59b6', '#f1c40f', '#1abc9c',
+                '#e67e22', '#34495e', '#d35400', '#c0392b', '#7f8c8d', '#2980b9'
+            ];
 
-            chartDatasets.forEach(dataset => {
-                const color = generateColor();
+            // วนลูปเพื่อกำหนดสีให้แต่ละเส้นกราฟจากชุดสีที่เตรียมไว้
+            chartDatasets.forEach((dataset, index) => {
+                // ใช้ % เพื่อวนกลับมาใช้สีแรกถ้ามีสินค้ามากกว่าจำนวนสี
+                const color = colorPalette[index % colorPalette.length];
                 dataset.borderColor = color;
-                dataset.backgroundColor = color + '33';
+                dataset.backgroundColor = color + '33'; // '33' คือการเติม Alpha เพื่อให้สีโปร่งแสง
             });
             
             const ctx = document.getElementById('salesChart').getContext('2d');
@@ -160,12 +154,10 @@
                 }
             });
         } else {
-            // ถ้าไม่มีข้อมูล ให้ซ่อน Canvas และแสดงข้อความ
             document.getElementById('salesChart').style.display = 'none';
             document.getElementById('noChartData').style.display = 'block';
         }
     });
 </script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
-</body>
 </html>
