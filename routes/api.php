@@ -20,6 +20,7 @@ Route::post('/orders/update-status', [OrderController::class, 'updateStatus']);
 // customer
 Route::get('/customers/{id}', [CustomerController::class, 'showApi']);
 Route::get('/customers/{cusId}/history', [OrderController::class, 'getCustomerHistory']);
+Route::post('/check-availability', [CustomerController::class, 'checkAvailability']);
 
 // employee
 Route::get('/employees/{id}', [EmployeeController::class, 'showApi']);

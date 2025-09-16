@@ -88,6 +88,26 @@ class CustomerController extends Controller
         ]);
     }
 }
+ public function checkAvailability(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'field' => 'required|string|in:username,email',
+            'value' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()->first()], 422);
+        }
+
+        $field = $request->field;
+        $value = $request->value;
+
+        $exists = Customer::where($field, $value)->exists();
+
+        return response()->json([
+            'available' => !$exists // ส่งค่า true ถ้า "ว่าง" (ใช้ได้), false ถ้า "ไม่ว่าง" (ซ้ำ)
+        ]);
+    }
 public function showApi($id)
     {
         $customer = Customer::select('fullname', 'email')->findOrFail($id);

@@ -56,7 +56,7 @@ class AuthController extends Controller
         // 4. ถ้าไม่เจอใครเลย หรือรหัสผ่านผิด
         return response()->json([
             "status" => "error",
-            "message" => "Invalid credentials"
+            "message" => "Username หรือ Password ของผู้ใช้ไม่ถูกต้อง"
         ], 401); // 401 Unauthorized
     }
 }
