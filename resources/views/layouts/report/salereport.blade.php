@@ -29,12 +29,12 @@
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                     <li class="nav-item">
                         <a href="{{ route('salereport.index') }}" class="nav-link text-white active">
-                            <i class="nav-icon fas fa-chart-line"></i> <p>รายงานยอดขายสินค้า</p>
+                            <i class="nav-icon fas fa-chart-line"></i> <p>รายงานการขายสินค้า</p>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('report.bills') }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-file-invoice-dollar"></i> <p>รายงานใบเสร็จ</p>
+                            <i class="nav-icon fas fa-chart-bar"></i> <p>รายงานยอดขาย/p>
                         </a>
                     </li>
                 </ul>
