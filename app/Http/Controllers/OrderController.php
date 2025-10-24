@@ -213,23 +213,19 @@ class OrderController extends Controller
         'message' => str_replace('${order_id}', $order->order_id, $message)
     ], $httpStatusCode);
 }
-    private function createReceiptForCompletedOrder(Order $order)
+   private function createReceiptForCompletedOrder(Order $order)
     {
         if (!$order->receipt) {
-            $subtotal = $order->details->sum('pay_total');
-            $discount = $order->promotion->promo_discount ?? 0;
-            $netTotal = $subtotal - $discount;
-
+            $netTotal = $order->details->sum('pay_total');
             Receipt::firstOrCreate(
                 ['order_id' => $order->order_id],
                 [
                     're_date' => $order->receive_date,
-                    'price_total' => $netTotal,
+                    'price_total' => $netTotal, 
                 ]
             );
         }
     }
-
 
    public function generateReceipt($id)
 {

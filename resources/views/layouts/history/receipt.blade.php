@@ -30,8 +30,34 @@
     </style>
 </head>
 <body class="hold-transition sidebar-mini">
+
+{{-- ✅ [FIX] เพิ่มส่วนคำนวณ Logic ไว้ด้านบน --}}
+@php
+    // ราคาสุทธิที่ถูกต้อง (จากตาราง receipt)
+    $netTotal = $receipt->price_total ?? $order->details->sum('pay_total');
+    
+    $originalTotal = 0;
+    
+    // วนลูปเพื่อหา "ราคาเต็ม"
+    foreach ($order->details as $detail) {
+        if ($detail->product) {
+            $originalTotal += $detail->product->pro_price * $detail->amount;
+        } else {
+            $originalTotal += $detail->pay_total; // Fallback
+        }
+    }
+    
+    // ส่วนลดที่แท้จริง
+    $totalDiscount = $originalTotal - $netTotal;
+    
+    // ดึงชื่อโปรโมชั่นทั้งหมด
+    $promoNames = $order->promotions->isNotEmpty() ? $order->promotions->pluck('promo_name')->implode(', ') : 'ไม่มี';
+@endphp
+
+
 <div class="wrapper">
     <aside class="main-sidebar sidebar-dark-primary elevation-4 min-vh-100 no-print">
+         {{-- ... (Sidebar เหมือนเดิม) ... --}}
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
         </a>
@@ -71,6 +97,7 @@
             <div class="container-fluid">
                 <div class="receipt-container">
                     <div class="receipt-header mb-4">
+                        {{-- ... (ส่วน Header ของใบเสร็จ เหมือนเดิม) ... --}}
                         <h4 class="mb-0">ริมหนองคาเฟ่</h4>
                         <p class="text-muted mb-0">ใบเสร็จรับเงิน</p>
                         <hr class="my-2">
@@ -79,6 +106,7 @@
                     </div>
 
                     <div class="receipt-body">
+                        {{-- ... (ส่วนรายการสินค้า เหมือนเดิม) ... --}}
                         @foreach($order->details as $detail)
                             <div class="item-row">
                                 <span>{{ $detail->product->pro_name ?? 'ไม่ระบุ' }} (x{{ $detail->amount }})</span>
@@ -89,38 +117,41 @@
                     
                     <hr class="my-2">
 
+                    {{-- ✅ [FIX] แก้ไขส่วนสรุปยอดทั้งหมด --}}
                     <div class="d-flex justify-content-between mb-1">
                         <span>ราคารวมสินค้า:</span>
-                        <span>{{ number_format($order->details->sum('pay_total'), 2) }} บาท</span>
+                        <span>{{ number_format($originalTotal, 2) }} บาท</span>
                     </div>
 
                     <div class="d-flex justify-content-between mb-1">
-                        <span>ส่วนลด ({{ $order->promotion->promo_name ?? 'ไม่มี' }}):</span>
-                        <span>-{{ number_format($order->promotion->promo_discount ?? 0, 2) }} บาท</span>
+                        <span>ส่วนลด ({{ $promoNames }}):</span>
+                        <span>-{{ number_format($totalDiscount, 2) }} บาท</span>
                     </div>
 
                     <div class="d-flex justify-content-between font-weight-bold mb-2">
                         <span>ราคารวมสุทธิ:</span>
-                        <span>{{ number_format($receipt->price_total ?? 0, 2) }} บาท</span>
+                        <span>{{ number_format($netTotal, 2) }} บาท</span>
                     </div>
                     
                     <hr class="my-2">
 
                    <div class="receipt-footer mt-4">
-                <p class="text-sm mb-1">
-                 <strong>พนักงาน:</strong> {{ $order->employee->em_name ?? 'ไม่ระบุ' }}
-                 </p>
-                    <p class="text-sm mb-1">
-                  <strong>เบอร์โทร:</strong> {{ $order->employee->em_tel ?? 'ไม่ระบุ' }}
-                </p>
-                    <p class="mt-3">ขอบคุณที่ใช้บริการ</p>
-                </div>
+                       {{-- ... (ส่วน Footer ของใบเสร็จ เหมือนเดิม) ... --}}
+                        <p class="text-sm mb-1">
+                         <strong>พนักงาน:</strong> {{ $order->employee->em_name ?? 'ไม่ระบุ' }}
+                         </p>
+                            <p class="text-sm mb-1">
+                          <strong>เบอร์โทร:</strong> {{ $order->employee->em_tel ?? 'ไม่ระบุ' }}
+                        </p>
+                            <p class="mt-3">ขอบคุณที่ใช้บริการ</p>
+                    </div>
                 </div>
             </div>
         </section>
     </div>
 </div>
 <div class="d-flex justify-content-end align-items-center mb-4 mr-4 no-print">
+    {{-- ... (ส่วนปุ่ม Print เหมือนเดิม) ... --}}
     <a href="{{ route('history.index') }}" class="btn btn-secondary mr-2">
         <i class="fas fa-arrow-left"></i> กลับ
     </a>

@@ -77,7 +77,7 @@
                     </div>
                     <div class="form-group">
                         <label>รหัสผ่าน</label>
-                        <input type="password" name="password" class="form-control" placeholder="ตั้งค่ารหัสผ่าน" required>
+                        <input type="password" name="password" class="form-control" placeholder="ตั้งค่ารหัสผ่าน(ขั้นต่ำ6ตัวขึ้นไป)" required>
                     </div>
                     <div class="form-group">
                         <label>เบอร์โทร</label>

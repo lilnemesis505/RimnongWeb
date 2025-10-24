@@ -29,7 +29,7 @@ public function store(Request $request)
     $rules = [
         'em_name'  => 'required|string|max:60',
         'username' => 'required|string|max:35|unique:employee,username',
-        'password' => 'required|string|min:6',
+        'password' => 'required|string|min:6', // กฎนี้จะถูกจัดการแบบ Dynamic
         'em_tel'   => 'required|string|max:10',
         'em_email' => 'required|email|unique:employee,em_email',
     ];
@@ -38,7 +38,7 @@ public function store(Request $request)
     $messages = [
         'em_name.required' => 'กรุณากรอกชื่อ-สกุล',
         'username.required' => 'กรุณากรอก Username',
-        'username.unique'   => 'Username นี้มีผู้ใช้งานแล้ว', // <-- This is the one you asked about
+        'username.unique'   => 'Username นี้มีผู้ใช้งานแล้ว',
         'password.required' => 'กรุณากรอกรหัสผ่าน',
         'password.min'      => 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
         'em_tel.required'   => 'กรุณากรอกเบอร์โทร',
@@ -50,38 +50,64 @@ public function store(Request $request)
 
     // --- Part 1: Handling the confirmation from the modal ---
     if ($request->input('confirm_creation') === 'true') {
-        // Pass the rules and custom messages to the validate method
+        
+        // ลบกฎการ validate รหัสผ่านออก (เหมือนเดิม)
+        unset($rules['password']);
+
+        // Validate ข้อมูลอื่นๆ ที่เหลือ (เหมือนเดิม)
         $validated = $request->validate($rules, $messages);
-        $validated['password'] = bcrypt($validated['password']);
+
+        // **จุดแก้ไขที่ 1:** ตรวจสอบ "Regular Session"
+        if (!session('temp_hashed_password')) {
+            // ถ้าไม่มี (เช่น เปิดหน้าทิ้งไว้นานมาก หรือปัญหาอื่นๆ)
+            return redirect()->back()
+                ->withInput($request->except('password'))
+                ->withErrors(['password' => 'Session หมดอายุ กรุณากรอกรหัสผ่านใหม่อีกครั้ง']);
+        }
+
+        // ดึงรหัสผ่านที่ HASH แล้วจาก Session มาใช้ (เหมือนเดิม)
+        $validated['password'] = session('temp_hashed_password');
+
+        // สร้าง Employee (เหมือนเดิม)
         Employee::create($validated);
 
-        return redirect()->route('employee.index')->with('success', 'เพิ่มข้อมูลพนักงานเรียบร้อยแล้ว');
+        // **จุดแก้ไขที่ 2 (สำคัญมาก):** ล้าง "Regular Session" ทิ้ง
+        // หลังจากใช้งานเสร็จแล้ว
+        session()->forget('temp_hashed_password');
+
+        return redirect()->route('employee.index')->with('success', 'เพิ่มข้อมูลพนักงาน (ที่ชื่อซ้ำ) เรียบร้อยแล้ว');
     }
 
     // --- Part 2: Handling the initial form submission ---
 
-    // 2.1 Check for unique username and email first
-    $request->validate([
-        'username' => 'unique:employee,username',
-        'em_email' => 'unique:employee,em_email',
-    ], $messages); // Pass messages here as well
+    // Validate ข้อมูล "ทั้งหมด" ตั้งแต่ครั้งแรกเลย (เหมือนเดิม)
+    $validated = $request->validate($rules, $messages);
     
-    // 2.2 If username/email are OK, check for the duplicate name
+    // ตรวจสอบชื่อซ้ำ (เหมือนเดิม)
     $existingEmployee = Employee::where('em_name', $request->em_name)->first();
+    
     if ($existingEmployee) {
+        // ถ้าชื่อซ้ำ ให้ HASH รหัสผ่าน (เหมือนเดิม)
+        $hashedPassword = bcrypt($validated['password']);
+
+        // **จุดแก้ไขที่ 3 (สำคัญที่สุด):**
+        // เปลี่ยนจาก ->with() (Flash Session)
+        // เป็น session()->put() (Regular Session)
+        session()->put('temp_hashed_password', $hashedPassword);
+
+        // ส่งกลับไปหน้าเดิม (ส่วน `withInput` และ `with` ของ Modal ใช้แบบเดิมได้)
         return redirect()->back()
-            ->withInput()
+            ->withInput($request->except('password'))
             ->with('confirm_duplicate_name', $existingEmployee->em_name);
     }
 
-    // 2.3 If no duplicates, validate all rules and create
-    $validated = $request->validate($rules, $messages);
+    // 2.3 ถ้าไม่ซ้ำ (ผ่านทั้งหมด)
+    // Hash รหัสผ่าน และสร้าง Employee (เหมือนเดิม)
     $validated['password'] = bcrypt($validated['password']);
     Employee::create($validated);
 
     return redirect()->route('employee.index')->with('success', 'เพิ่มข้อมูลพนักงานเรียบร้อยแล้ว');
 }
-
     // แสดงหน้าแก้ไขพนักงาน
     public function edit($id)
 {
@@ -93,9 +119,9 @@ public function store(Request $request)
  public function update(Request $request, $id)
 {
     // 1. กำหนดกฎการตรวจสอบข้อมูล (Validation Rules)
+    //    (เราจะจัดการ em_name.unique แยกต่างหาก)
     $rules = [
-        // เพิ่ม unique rule สำหรับ em_name โดยไม่เช็คกับ ID ของตัวเอง
-        'em_name'  => 'required|string|max:60|unique:employee,em_name,' . $id . ',em_id',
+        'em_name'  => 'required|string|max:60', // กฎ unique จะถูกเพิ่ม/ลบ แบบ dynamic
         'username' => 'required|string|max:35|unique:employee,username,' . $id . ',em_id',
         'em_tel'   => 'required|string|max:10',
         'em_email' => 'required|email|unique:employee,em_email,' . $id . ',em_id',
@@ -113,14 +139,47 @@ public function store(Request $request)
         'em_email.unique'   => 'อีเมลนี้มีผู้ใช้งานแล้ว',
     ];
 
-    // 3. ทำการ Validate ข้อมูล
+    // --- Part 1: Handling the confirmation from the modal ---
+    // (ใช้ 'confirm_update' เป็น flag ใหม่)
+    if ($request->input('confirm_update') === 'true') {
+        
+        // เรายอมรับชื่อซ้ำ กฎ em_name จึงไม่ต้องมี unique
+        // แต่กฎของ username/email ยังต้อง unique
+        
+        // Validate ข้อมูล (โดยไม่มี em_name.unique)
+        $validated = $request->validate($rules, $messages);
+
+        // ค้นหาและอัปเดต
+        $employee = Employee::findOrFail($id);
+        $employee->update($validated);
+
+        return redirect()->route('employee.index')->with('success', 'แก้ไขข้อมูล (ที่ชื่อซ้ำ) สำเร็จ');
+    }
+
+    // --- Part 2: Handling the initial form submission ---
+
+    // 2.1 ตรวจสอบชื่อซ้ำ (กับคนอื่น) ด้วยตัวเองก่อน
+    $existingEmployee = Employee::where('em_name', $request->em_name)
+                                ->where('em_id', '!=', $id) // ต้องไม่ใช่ ID ของตัวเอง
+                                ->first();
+
+    if ($existingEmployee) {
+        // 2.2 ถ้าเจอซ้ำ: ให้ส่งกลับไปถาม (เหมือนตอน Add)
+        // (ใช้ 'confirm_duplicate_name_edit' เป็น session key ใหม่)
+        return redirect()->back()
+            ->withInput() // ส่งข้อมูลเก่ากลับไป
+            ->with('confirm_duplicate_name_edit', $existingEmployee->em_name);
+    }
+
+    // 2.3 ถ้าไม่ซ้ำ: ให้ทำการ Validate แบบ "เข้มงวด" (เพิ่มกฎ unique ให้ em_name)
+    $rules['em_name'] = 'required|string|max:60|unique:employee,em_name,' . $id . ',em_id';
+    
     $validated = $request->validate($rules, $messages);
 
-    // 4. ค้นหาพนักงานและอัปเดตข้อมูล
+    // ค้นหาและอัปเดตตามปกติ
     $employee = Employee::findOrFail($id);
     $employee->update($validated);
 
-    // 5. ส่งกลับไปที่หน้ารายการพร้อมข้อความแจ้งเตือน
     return redirect()->route('employee.index')->with('success', 'แก้ไขข้อมูลสำเร็จ');
 }
  public function showApi($id)

@@ -34,7 +34,7 @@
                     </li>
                     <li class="nav-item">
                         <a href="{{ route('report.bills') }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-chart-bar"></i> <p>รายงานยอดขาย/p>
+                            <i class="nav-icon fas fa-chart-bar"></i> <p>รายงานยอดขาย</p>
                         </a>
                     </li>
                 </ul>

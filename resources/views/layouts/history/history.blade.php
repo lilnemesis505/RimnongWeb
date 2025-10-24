@@ -7,13 +7,14 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
     <style>
         .text-muted-del {
-            color: #6c757d;
+            color: #dc3545; /* สีแดง */
         }
     </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
 
+    {{-- ... (Navbar and Sidebar เหมือนเดิม) ... --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">ข้อมูลการสั่งซื้อ</span>
     </nav>
@@ -78,37 +79,54 @@
                             <tr class="text-center">
                                 <td>{{ $orders->firstItem() + $index }}</td> <td>{{ $order->order_id }}</td>
                                 <td>
-                                    {{-- ✅ [FIX] แก้ไขตรรกะการคำนวณราคาทั้งหมด --}}
+                                    {{-- ✅ [FIX] แก้ไข Logic การคำนวณทั้งหมด --}}
                                     @php
-                                        // คำนวณส่วนลดทั้งหมดจากทุกโปรโมชั่นที่เกี่ยวข้องกับ Order นี้
-                                        $totalDiscount = $order->promotions->sum('promo_discount');
-                                        // price_total คือราคาสุทธิหลังหักส่วนลดแล้ว
+                                        // 1. ยอดสุทธิ (Net Total) (อันนี้ถูกต้องอยู่แล้ว)
                                         $netTotal = $order->price_total;
-                                        // คำนวณราคาเต็มก่อนหักส่วนลด
-                                        $originalPrice = $netTotal + $totalDiscount;
+                                        
+                                        $originalPrice = 0;
+                                        
+                                        // 2. คำนวณ "ราคาเต็ม"
+                                        // (*** Controller ที่เรียกหน้านี้ ต้อง .with('details.product') มาด้วย ***)
+                                        if ($order->relationLoaded('details') && $order->details) {
+                                            foreach ($order->details as $detail) {
+                                                if ($detail->relationLoaded('product') && $detail->product) {
+                                                    
+                                                    // ✅ [FIX] เปลี่ยนจาก pro_price เป็น price
+                                                    $originalPrice += $detail->product->price * $detail->amount;
+
+                                                } else {
+                                                    $originalPrice = $netTotal; // Fallback
+                                                    break;
+                                                }
+                                            }
+                                        } else {
+                                            $originalPrice = $netTotal; // Fallback
+                                        }
+
+                                        // 3. ส่วนลดที่แท้จริง = ราคาเต็ม - ยอดสุทธิ
+                                        $totalDiscount = $originalPrice - $netTotal;
                                     @endphp
 
-                                    @if($totalDiscount > 0)
-                                        {{-- ถ้ามีส่วนลด ให้ขีดฆ่าราคาเต็ม และแสดงราคาสุทธิ --}}
+                                    @if($totalDiscount > 0.01) {{-- เทียบค่า float --}}
                                         <del class="text-muted-del">{{ number_format($originalPrice, 2) }}</del><br>
                                         <strong>{{ number_format($netTotal, 2) }}</strong>
                                     @else
-                                        {{-- ถ้าไม่มีส่วนลด ก็แสดงราคาปกติ --}}
                                         <strong>{{ number_format($netTotal, 2) }}</strong>
                                     @endif
                                 </td>
                                 <td>{{ \Carbon\Carbon::parse($order->order_date)->format('d/m/Y H:i') }}</td>
                                <td>
-    @if(is_null($order->em_id))
-        <span class="badge badge-danger">ยังไม่ถูกรับรายการ</span>
-    @elseif(!is_null($order->grab_date))
-        <span class="badge badge-primary">ได้รับสินค้าแล้ว</span>
-    @elseif(!is_null($order->receive_date))
-        <span class="badge badge-success">เตรียมสินค้าเสร็จสิ้น</span>
-    @else
-        <span class="badge badge-warning">กำลังดำเนินการ</span>
-    @endif
-</td>
+                                    @if(is_null($order->em_id))
+                                        <span class="badge badge-danger">ยังไม่ถูกรับรายการ</span>
+                                    @elseif(!is_null($order->grab_date))
+                                        <span class="badge badge-primary">ได้รับสินค้าแล้ว</span>
+                                    @elseif(!is_null($order->receive_date))
+                                        <span class="badge badge-success">เตรียมสินค้าเสร็จสิ้น</span>
+                                    @else
+                                        <span class="badge badge-warning">กำลังดำเนินการ</span>
+                                    @endif
+                               </td>
                                 <td>
                                     @if(!empty($order->slips_url))
                                         <a href="{{ $order->slips_url }}" target="_blank">

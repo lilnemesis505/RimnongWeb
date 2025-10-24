@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
     
-    {{-- ✅ [ADD] เพิ่ม CSS สำหรับ Tag โปรโมชั่น --}}
     <style>
         .promo-tag {
             display: inline-block;
@@ -19,14 +18,14 @@
             white-space: nowrap;
             vertical-align: baseline;
             border-radius: 0.25rem;
-            background-color: #17a2b8; /* สี Cyan หรือ Teal */
+            background-color: #17a2b8; 
             margin-right: 5px;
         }
     </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
-    {{-- ... ส่วนของ Sidebar ... --}}
+    {{-- ... (Sidebar เหมือนเดิม) ... --}}
     <aside class="main-sidebar sidebar-dark-primary elevation-4 min-vh-100">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -54,7 +53,6 @@
                     </li>
                    @if(!is_null($order->receive_date))
 <li class="nav-item">
-    {{-- ✅ แก้ไขลิงก์ให้ถูกต้อง --}}
     <a href="{{ route('order.receipt', ['id' => $order->order_id]) }}" class="nav-link text-white"> 
         <i class="nav-icon fas fa-receipt"></i> <p>ใบเสร็จ</p>
     </a>
@@ -73,7 +71,7 @@
                         <h4 class="mb-0">รายละเอียดคำสั่งซื้อ #{{ $order->order_id }}</h4>
                     </div>
                     <div class="card-body">
-                        {{-- ✅ [RE-LAYOUT] จัด Layout ใหม่ทั้งหมด --}}
+                        {{-- ... (ส่วนข้อมูลลูกค้า, ข้อมูลสั่งซื้อ เหมือนเดิม) ... --}}
                         <div class="row">
                             <div class="col-md-6">
                                 <h5>ข้อมูลลูกค้า</h5>
@@ -99,7 +97,7 @@
                                     @endif
                                 </p>
                                 <p><strong>โปรโมชั่นที่ใช้:</strong>
-                                    {{-- ✅ [FIX] เปลี่ยน Style การแสดงผลโปรโมชั่น --}}
+                                    {{-- ✅ [FIX] ลบ @empty ที่ซ้ำออก --}}
                                     @forelse($order->promotions as $promo)
                                         <span class="promo-tag">{{ $promo->promo_name }}</span>
                                     @empty
@@ -112,6 +110,7 @@
 
                         <hr>
                         <h5>รายการสินค้า</h5>
+                        {{-- (ส่วนตารางนี้ถูกต้องแล้ว) --}}
                         <table class="table table-bordered table-hover">
                             <thead class="thead-light text-center">
                                 <tr>
@@ -126,8 +125,8 @@
                                     <tr>
                                         <td>{{ $detail->product->pro_name ?? 'ไม่ระบุ' }}</td>
                                         <td class="text-center">{{ $detail->amount }}</td>
-                                        <td class="text-right">{{ number_format($detail->price_list, 2) }}</td>
-                                        <td class="text-right">{{ number_format($detail->pay_total, 2) }}</td>
+                                        <td class="text-right">{{ number_format($detail->product->price, 2) }}</td>
+                                        <td class="text-right">{{ number_format($detail->product->price * $detail->amount, 2) }}</td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -136,14 +135,27 @@
                         <div class="row mt-4 justify-content-end">
                             <div class="col-md-5">
                                 <h5 class="mb-3">สรุปยอดรวม</h5>
+                                
+                                {{-- (ส่วนสรุปยอดนี้ถูกต้องแล้ว) --}}
                                 @php
-                                    $totalDiscount = $order->promotions->sum('promo_discount');
                                     $netTotal = $order->price_total;
+
+                                    $originalTotal = 0;
+                                    
+                                    foreach ($order->details as $detail) {
+                                        if ($detail->product) {
+                                            $originalTotal += $detail->product->price * $detail->amount;
+                                        } else {
+                                            $originalTotal += $detail->pay_total; // Fallback
+                                        }
+                                    }
+                                    $totalDiscount = $originalTotal - $netTotal;
                                 @endphp
+                                
                                 <table class="table table-sm table-borderless">
                                     <tr>
                                         <td><strong>ราคารวม (ก่อนหักส่วนลด):</strong></td>
-                                        <td class="text-right">{{ number_format($netTotal + $totalDiscount, 2) }} บาท</td>
+                                        <td class="text-right">{{ number_format($originalTotal, 2) }} บาท</td>
                                     </tr>
                                     <tr>
                                         <td><strong>ส่วนลดโปรโมชั่น:</strong></td>
@@ -160,15 +172,16 @@
                 </div>
 
                 <div class="d-flex justify-content-end align-items-center my-4">
+                    {{-- ... (ส่วนปุ่ม 'กลับ' และ 'ลบ' เหมือนเดิม) ... --}}
                     <a href="{{ route('history.index') }}" class="btn btn-secondary mr-2">
                         <i class="fas fa-arrow-left"></i> กลับ
                     </a>
                     
                     @if(is_null($order->receive_date))
-                        <form action="#" method="POST" class="d-inline"> {{-- route('order.destroy', ['id' => $order->order_id]) --}}
+                        <form action="{{ route('order.destroy', ['id' => $order->order_id]) }}" method="POST" class="d-inline" onsubmit="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">
                             @csrf
                             @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?');">
+                            <button type="submit" class="btn btn-danger">
                                 <i class="fas fa-trash"></i> ลบรายการสั่งซื้อ
                             </button>
                         </form>
