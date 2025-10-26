@@ -13,6 +13,7 @@
     </nav>
 
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        {{-- ... (Sidebar เหมือนเดิม) ... --}}
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
         </a>
@@ -48,14 +49,12 @@
                 <h3 class="card-title"><i class="fas fa-user-plus"></i> เพิ่มข้อมูลพนักงาน</h3>
             </div>
 
-            {{-- ให้ Form มี ID เพื่อง่ายต่อการอ้างอิงใน JS --}}
             <form id="employee-form" action="{{ route('employee.store') }}" method="POST">
                 @csrf
-                {{-- เพิ่ม Hidden field สำหรับส่ง Flag ยืนยัน --}}
                 <input type="hidden" name="confirm_creation" id="confirm_creation_flag" value="">
 
                 <div class="card-body">
-                     {{-- แสดงข้อความ error (ถ้ามี) --}}
+                     {{-- ... (ส่วนแสดง Error เหมือนเดิม) ... --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <ul>
@@ -68,17 +67,25 @@
 
                     <div class="form-group">
                         <label>ชื่อ-สกุล</label>
-                        {{-- old('em_name') ช่วยให้ข้อมูลไม่หายไปเมื่อเกิด error หรือต้องยืนยัน --}}
                         <input type="text" name="em_name" class="form-control" placeholder="กรอกชื่อ-สกุล" value="{{ old('em_name') }}" required>
                     </div>
                     <div class="form-group">
                         <label>Username</label>
                         <input type="text" name="username" class="form-control" placeholder="ตั้งค่า Username" value="{{ old('username') }}" required>
                     </div>
+
+                    {{-- ✅ [FIX] แก้ไข Placeholder เป็น 8 ตัว --}}
                     <div class="form-group">
                         <label>รหัสผ่าน</label>
-                        <input type="password" name="password" class="form-control" placeholder="ตั้งค่ารหัสผ่าน(ขั้นต่ำ6ตัวขึ้นไป)" required>
+                        <input type="password" name="password" class="form-control" placeholder="ตั้งค่ารหัสผ่าน (ขั้นต่ำ 8 ตัว)" required>
                     </div>
+                    
+                    {{-- ✅ [FIX] เพิ่มช่องยืนยันรหัสผ่าน --}}
+                    <div class="form-group">
+                        <label>ยืนยันรหัสผ่าน</label>
+                        <input type="password" name="password_confirmation" class="form-control" placeholder="ยืนยันรหัสผ่านอีกครั้ง" required>
+                    </div>
+
                     <div class="form-group">
                         <label>เบอร์โทร</label>
                         <input type="text" name="em_tel" class="form-control" placeholder="เช่น 0812345678" value="{{ old('em_tel') }}" required>
@@ -99,7 +106,7 @@
     </div>
 </div>
 
-{{-- === ส่วนของ Modal ที่จะแสดงเมื่อชื่อซ้ำ === --}}
+{{-- ... (Modal และ Scripts เหมือนเดิม) ... --}}
 <div class="modal fade" id="confirmationModal" tabindex="-1" role="dialog">
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
@@ -124,27 +131,16 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 
-{{-- === JavaScript สำหรับควบคุม Modal === --}}
 <script>
     $(document).ready(function() {
-        // ตรวจสอบว่ามี session 'confirm_duplicate_name' ส่งมาหรือไม่
         @if(session('confirm_duplicate_name'))
-            // ดึงชื่อที่ซ้ำจาก session
             const duplicateName = "{{ session('confirm_duplicate_name') }}";
-            
-            // ตั้งค่าข้อความใน modal
             $('#confirmationMessage').text(`พนักงานชื่อ "${duplicateName}" มีอยู่ในระบบแล้ว คุณยืนยันที่จะสร้างพนักงานซ้ำหรือไม่?`);
-            
-            // แสดง modal
             $('#confirmationModal').modal('show');
         @endif
 
-        // เมื่อกดปุ่ม 'ยืนยันการสร้าง' ใน modal
         $('#confirm-create-btn').on('click', function() {
-            // 1. ตั้งค่า hidden field 'confirm_creation' เป็น true
             $('#confirm_creation_flag').val('true');
-            
-            // 2. submit ฟอร์มหลัก
             $('#employee-form').submit();
         });
     });

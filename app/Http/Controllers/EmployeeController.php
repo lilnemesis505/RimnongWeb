@@ -29,7 +29,8 @@ public function store(Request $request)
     $rules = [
         'em_name'  => 'required|string|max:60',
         'username' => 'required|string|max:35|unique:employee,username',
-        'password' => 'required|string|min:6', // กฎนี้จะถูกจัดการแบบ Dynamic
+        // ✅ [FIX] เปลี่ยน min:6 เป็น min:8 และเพิ่ม 'confirmed'
+        'password' => 'required|string|min:8|confirmed',
         'em_tel'   => 'required|string|max:10',
         'em_email' => 'required|email|unique:employee,em_email',
     ];
@@ -40,9 +41,10 @@ public function store(Request $request)
         'username.required' => 'กรุณากรอก Username',
         'username.unique'   => 'Username นี้มีผู้ใช้งานแล้ว',
         'password.required' => 'กรุณากรอกรหัสผ่าน',
-        'password.min'      => 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+        'password.min'      => 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร',
+        'password.confirmed' => 'การยืนยันรหัสผ่านไม่ตรงกัน',
         'em_tel.required'   => 'กรุณากรอกเบอร์โทร',
-        'em_tel.max'        => 'เบอร์โทรต้องมี 10 หลัก',
+        'em_tel.digits:10'        => 'เบอร์โทรต้องมี 10 หลัก',
         'em_email.required' => 'กรุณากรอกอีเมล',
         'em_email.email'    => 'รูปแบบอีเมลไม่ถูกต้อง',
         'em_email.unique'   => 'อีเมลนี้มีผู้ใช้งานแล้ว',
@@ -57,22 +59,14 @@ public function store(Request $request)
         // Validate ข้อมูลอื่นๆ ที่เหลือ (เหมือนเดิม)
         $validated = $request->validate($rules, $messages);
 
-        // **จุดแก้ไขที่ 1:** ตรวจสอบ "Regular Session"
         if (!session('temp_hashed_password')) {
-            // ถ้าไม่มี (เช่น เปิดหน้าทิ้งไว้นานมาก หรือปัญหาอื่นๆ)
             return redirect()->back()
                 ->withInput($request->except('password'))
                 ->withErrors(['password' => 'Session หมดอายุ กรุณากรอกรหัสผ่านใหม่อีกครั้ง']);
         }
 
-        // ดึงรหัสผ่านที่ HASH แล้วจาก Session มาใช้ (เหมือนเดิม)
         $validated['password'] = session('temp_hashed_password');
-
-        // สร้าง Employee (เหมือนเดิม)
         Employee::create($validated);
-
-        // **จุดแก้ไขที่ 2 (สำคัญมาก):** ล้าง "Regular Session" ทิ้ง
-        // หลังจากใช้งานเสร็จแล้ว
         session()->forget('temp_hashed_password');
 
         return redirect()->route('employee.index')->with('success', 'เพิ่มข้อมูลพนักงาน (ที่ชื่อซ้ำ) เรียบร้อยแล้ว');
@@ -81,28 +75,22 @@ public function store(Request $request)
     // --- Part 2: Handling the initial form submission ---
 
     // Validate ข้อมูล "ทั้งหมด" ตั้งแต่ครั้งแรกเลย (เหมือนเดิม)
+    // (Validation ใหม่ min:8|confirmed จะทำงานที่นี่)
     $validated = $request->validate($rules, $messages);
     
     // ตรวจสอบชื่อซ้ำ (เหมือนเดิม)
     $existingEmployee = Employee::where('em_name', $request->em_name)->first();
     
     if ($existingEmployee) {
-        // ถ้าชื่อซ้ำ ให้ HASH รหัสผ่าน (เหมือนเดิม)
         $hashedPassword = bcrypt($validated['password']);
-
-        // **จุดแก้ไขที่ 3 (สำคัญที่สุด):**
-        // เปลี่ยนจาก ->with() (Flash Session)
-        // เป็น session()->put() (Regular Session)
         session()->put('temp_hashed_password', $hashedPassword);
 
-        // ส่งกลับไปหน้าเดิม (ส่วน `withInput` และ `with` ของ Modal ใช้แบบเดิมได้)
         return redirect()->back()
             ->withInput($request->except('password'))
             ->with('confirm_duplicate_name', $existingEmployee->em_name);
     }
 
     // 2.3 ถ้าไม่ซ้ำ (ผ่านทั้งหมด)
-    // Hash รหัสผ่าน และสร้าง Employee (เหมือนเดิม)
     $validated['password'] = bcrypt($validated['password']);
     Employee::create($validated);
 

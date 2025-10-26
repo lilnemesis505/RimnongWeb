@@ -17,11 +17,36 @@ use App\Http\Controllers\AdminLoginController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\HomeController; 
+use App\Http\Controllers\Auth\AdminForgotPasswordController;
 
 Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AdminLoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AdminLoginController::class, 'logout'])->name('logout');
 
+// Routes สำหรับลืมรหัสผ่าน
+// 1. แสดงฟอร์มขอ OTP (กรอกอีเมล)
+Route::get('admin/forgot-password', [AdminForgotPasswordController::class, 'showLinkRequestForm'])
+     ->name('admin.password.request');
+
+// 2. ส่ง OTP ไปที่อีเมล
+Route::post('admin/forgot-password', [AdminForgotPasswordController::class, 'sendOtpEmail'])
+     ->name('admin.password.email');
+
+// 3. (ใหม่) แสดงฟอร์มกรอก OTP
+Route::get('admin/verify-otp', [AdminForgotPasswordController::class, 'showVerifyForm'])
+     ->name('admin.otp.verify');
+
+// 4. (ใหม่) ตรวจสอบ OTP
+Route::post('admin/verify-otp', [AdminForgotPasswordController::class, 'verifyOtp'])
+     ->name('admin.otp.check');
+
+// 5. แสดงฟอร์มตั้งรหัสผ่านใหม่ (หลังจากยืนยัน OTP สำเร็จ)
+Route::get('admin/reset-password', [AdminForgotPasswordController::class, 'showResetForm'])
+     ->name('admin.password.reset');
+
+// 6. อัปเดตรหัสผ่านใหม่
+Route::post('admin/reset-password', [AdminForgotPasswordController::class, 'resetPassword'])
+     ->name('admin.password.update');
 
 
 //admin loginก่อน
@@ -76,7 +101,7 @@ Route::middleware('admin.auth')->group(function () {
 
     // reports
  Route::get('/salereport', [ReportController::class, 'saleReport'])->name('salereport.index');
-Route::get('/report/bills', [ReportController::class, 'billReport'])->name('report.bills');
+ Route::get('/report/bills', [ReportController::class, 'billReport'])->name('report.bills');
 
     // dashboard
 

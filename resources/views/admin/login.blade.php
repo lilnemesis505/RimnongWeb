@@ -85,6 +85,9 @@
 
             <button type="submit" class="btn btn-primary btn-login">เข้าสู่ระบบ</button>
         </form>
+        <div class="text-center mt-3">
+            <a href="{{ route('admin.password.request') }}">ลืมรหัสผ่าน?</a>
+        </div>
     </div>
 
     <!-- Bootstrap JS -->
