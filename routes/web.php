@@ -19,9 +19,14 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\HomeController; 
 use App\Http\Controllers\Auth\AdminForgotPasswordController;
 
+// login Admin
 Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AdminLoginController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AdminLoginController::class, 'logout'])->name('logout');
+
+//register Admin
+Route::get('admin/register', [AdminLoginController::class, 'showRegistrationForm'])->name('admin.register.form');
+Route::post('admin/register', [AdminLoginController::class, 'register'])->name('admin.register.submit');
 
 // Routes สำหรับลืมรหัสผ่าน
 // 1. แสดงฟอร์มขอ OTP (กรอกอีเมล)
