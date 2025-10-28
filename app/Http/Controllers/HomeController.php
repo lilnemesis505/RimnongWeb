@@ -11,6 +11,7 @@ use App\Models\Promotion;
 use Carbon\Carbon;
 use App\Models\Product;
 use App\Models\Receipt;
+use App\Models\MaterialWithdrawal;
 
 class HomeController extends Controller
 {
@@ -61,6 +62,10 @@ class HomeController extends Controller
                 $promo->days_left = Carbon::parse($promo->promo_end)->diffInDays($today);
                 return $promo;
             });
+            $latestWithdrawals = MaterialWithdrawal::with(['stockMaterial', 'admin']) // โหลดชื่อวัตถุดิบ
+                                             ->orderBy('withdraw_date', 'desc')
+                                             ->limit(5) // เอาแค่ 5 รายการล่าสุด
+                                             ->get();
         
         // === 4. ส่งข้อมูลทั้งหมดไปยัง View ===
         return view('welcome', compact(
@@ -70,7 +75,8 @@ class HomeController extends Controller
             'expiringStock', 
             'activePromotions',
             'productCount',
-            'stockItemCount'
+            'stockItemCount',
+            'latestWithdrawals'
         ));
     }
 }
