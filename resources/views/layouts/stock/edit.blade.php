@@ -5,16 +5,23 @@
     <title>แก้ไขวัสดุคงคลัง</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+    <style>
+        .current-image {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+    </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
 
-    <!-- Navbar -->
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">ข้อมูลปรับปรุงล็อตสินค้า</span>
     </nav>
 
-    <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -50,88 +57,108 @@
         </div>
     </aside>
 
-    <!-- Content Wrapper -->
-<!-- Content Wrapper -->
 <div class="content-wrapper p-3">
     <div class="card card-warning">
         <div class="card-header">
             <h3 class="card-title"><i class="fas fa-edit"></i> แก้ไขข้อมูลล็อตวัตถุดิบ</h3>
         </div>
 
-        <form action="{{ route('stock.update', $mat->mat_id) }}" method="POST">
+        {{-- ✅ [FIX] 1. เพิ่ม enctype="multipart/form-data" --}}
+        <form action="{{ route('stock.update', $mat->mat_id) }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
             <div class="card-body">
 
+                {{-- ✅ [FIX] 2. เปลี่ยน input ที่ readonly ให้ส่งค่าได้ --}}
                 <div class="form-group">
                     <label>ชื่อวัสดุ</label>
-                    <input type="text" class="form-control" value="{{ $mat->mat_name }}" readonly>
+                    <input type="text" name="mat_name" class="form-control" value="{{ old('mat_name', $mat->mat_name) }}" required>
                 </div>
 
                 <div class="form-group">
                     <label>ประเภทวัสดุ</label>
-                    <input type="text" class="form-control" value="{{ $mat->type->type_name ?? '-' }}" readonly>
+                    {{-- (Controller ส่ง $types มาให้แล้ว) --}}
+                    <select name="type_id" class="form-control" required>
+                        @foreach($types as $type)
+                            <option value="{{ $type->type_id }}" {{ $mat->type_id == $type->type_id ? 'selected' : '' }}>
+                                {{ $type->type_name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <div class="form-group">
                     <label>วันที่นำเข้า</label>
-                    <p class="form-control-plaintext">
-                        {{ \Carbon\Carbon::parse($mat->import_date)->format('d/m/Y') }}
-                    </p>
+                    {{-- (เปลี่ยนเป็น input type="date" เพื่อให้ส่งค่าได้) --}}
+                    <input type="date" name="import_date" class="form-control" value="{{ old('import_date', \Carbon\Carbon::parse($mat->import_date)->format('Y-m-d')) }}" required>
                 </div>
 
                 <div class="form-group">
                     <label>วันหมดอายุ</label>
-                    <p class="form-control-plaintext">
-                        {{ \Carbon\Carbon::parse($mat->exp_date)->format('d/m/Y') }}
-                    </p>
+                     {{-- (เปลี่ยนเป็น input type="date") --}}
+                    <input type="date" name="exp_date" class="form-control" value="{{ old('exp_date', $mat->exp_date ? \Carbon\Carbon::parse($mat->exp_date)->format('Y-m-d') : '') }}">
                 </div>
 
                 <hr>
 
+                {{-- ✅ [เพิ่ม] 3. ส่วนแสดง/แก้ไขรูปภาพ --}}
+                <div class="form-group">
+                    <label>รูปภาพปัจจุบัน</label><br>
+                    @if($mat->image)
+                        <img src="{{ $mat->image }}?tr=w-150,h-150,fo-auto" alt="{{ $mat->mat_name }}" class="current-image mb-2">
+                    @else
+                        <p class="text-muted">ไม่มีรูปภาพ</p>
+                    @endif
+                </div>
+
+                <div class="form-group">
+                    <label for="image_upload">เปลี่ยนรูปภาพ (รองรับ .jpg, .png)</label>
+                    <input type="file" name="image_upload" id="image_upload" class="form-control-file" accept=".jpg, .jpeg, .png">
+                    <small class="form-text text-muted">หากไม่ต้องการเปลี่ยนรูปภาพ ให้เว้นว่างไว้</small>
+                </div>
+
+                <hr>
+
+                {{-- (ส่วนที่เหลือของคุณ ถูกต้องแล้ว) --}}
                 <div class="form-group">
                     <label>จำนวนที่นำเข้า</label>
-                    <input type="number" name="quantity" class="form-control" value="{{ $mat->quantity }}" required>
+                    <input type="number" name="quantity" class="form-control" value="{{ old('quantity', $mat->quantity) }}" required>
                 </div>
 
                 <div class="form-group">
                     <label>จำนวนคงเหลือ</label>
-                    <input type="number" name="remain" class="form-control" value="{{ $mat->remain }}" required>
+                    <input type="number" name="remain" class="form-control" value="{{ old('remain', $mat->remain) }}" required>
                 </div>
 
                 <div class="form-group">
                     <label>ราคาต่อหน่วย</label>
-                    <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ $mat->unitcost }}" required>
+                    <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ old('unitcost', $mat->unitcost) }}" required>
                 </div>
 
                 <div class="form-group">
                     <label>สถานะ</label><br>
-
                     <div class="form-check">
-                        <input type="radio" name="status" value="0" {{ $mat->status == 0 ? 'checked' : '' }}>
+                        <input type="radio" name="status" value="0" {{ old('status', $mat->status) == 0 ? 'checked' : '' }}>
                         <label class="form-check-label">ปกติ</label>
                     </div>
-
                     <div class="form-check">
-                        <input type="radio" name="status" value="1" {{ $mat->status == 1 ? 'checked' : '' }}>
+                        <input type="radio" name="status" value="1" {{ old('status', $mat->status) == 1 ? 'checked' : '' }}>
                         <label class="form-check-label">หมด และยังไม่ได้สั่ง</label>
                     </div>
-
                     <div class="form-check">
-                        <input type="radio" name="status" value="2" {{ $mat->status == 2 ? 'checked' : '' }}>
+                        <input type="radio" name="status" value="2" {{ old('status', $mat->status) == 2 ? 'checked' : '' }}>
                         <label class="form-check-label">หมด และสั่งซื้อแต่ยังไม่ได้รับ</label>
                     </div>
                 </div>
 
             </div>
 
-            <!-- ปุ่มอยู่ข้างกัน -->
             <div class="card-footer d-flex justify-content-end gap-2">
                 <button type="submit" class="btn btn-warning">
                     <i class="fas fa-save"></i> บันทึกการแก้ไข
                 </button>
-        </form>
+        </form> {{-- </form> ของ 'update' ต้องปิดที่นี่ --}}
 
         <form action="{{ route('stock.destroy', $mat->mat_id) }}" method="POST"
               onsubmit="return confirm('คุณแน่ใจว่าต้องการลบข้อมูลนี้หรือไม่?')">

@@ -3,18 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>ข้อมูลล็อตสินค้า </title>
-    <!-- AdminLTE CSS via CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+    <style>
+        /* เพิ่ม Style สำหรับรูปภาพในตาราง */
+        .table-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            background-color: #eee;
+        }
+    </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
-    <!-- Navbar -->
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">ข้อมูลล็อตสินค้า</span>
     </nav>
 
-    <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -45,14 +52,15 @@
         </div>
     </aside>
 
-    <!-- Content Wrapper -->
     <div class="content-wrapper p-3" style="min-height: 100vh;">
         <div class="card">
             <div class="card-body p-0">
                 <table class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
+                            
                             <th>#</th>
+                            <th style="width: 60px;">รูปภาพ</th> 
                             <th>ชื่อวัสดุ</th>
                             <th>ประเภท</th>
                             <th>วันที่นำเข้า</th>
@@ -67,6 +75,15 @@
                     <tbody>
                         @foreach($stock_mats as $i => $mat)
                         <tr>
+                            <td class="text-center">
+                                @if($mat->image)
+                                    
+                                    <img src="{{ $mat->image }}?tr=w-50,h-50,fo-auto" alt="{{ $mat->mat_name }}" class="table-image">
+                                @else
+                                    {{-- รูปภาพสำรอง (หรือ placeholder) --}}
+                                    <i class="fas fa-image fa-2x text-muted"></i>
+                                @endif
+                            </td>
                             <td>{{ $stock_mats->firstItem() + $i }}</td>
                             <td>{{ $mat->mat_name }}</td>
                             <td>{{ $mat->type->type_name ?? '-' }}</td>
@@ -108,7 +125,6 @@
     </div>
 </div>
 
-<!-- AdminLTE JS via CDN -->
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>
 </html>

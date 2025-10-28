@@ -37,7 +37,7 @@ class HomeController extends Controller
         $productCount = Product::count();
         // คำนวณยอดขายจากตารางใบเสร็จ (Receipts) ซึ่งจะแม่นยำกว่า
         $totalSales = Receipt::sum('price_total');
-
+        $stockItemCount = StockMat::count();
         $today = Carbon::today();
 
         // === 2. ดึงวัตถุดิบที่ใกล้หมดอายุ (หมดอายุใน 7 วันข้างหน้า และยังมีของเหลือ) ===
@@ -69,7 +69,8 @@ class HomeController extends Controller
             'totalSales', 
             'expiringStock', 
             'activePromotions',
-            'productCount'
+            'productCount',
+            'stockItemCount'
         ));
     }
 }

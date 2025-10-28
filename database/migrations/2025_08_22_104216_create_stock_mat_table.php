@@ -18,7 +18,8 @@ class CreateStockMatTable extends Migration
             $table->integer('remain')->default(0);
             $table->decimal('unitcost', 10, 2)->default(0);
             $table->tinyInteger('status')->default(0);
-
+            $table->string('image')->nullable(); 
+            $table->string('image_id')->nullable(); 
             //เชื่อมกับตาราง protype
             $table->foreign('type_id')
                   ->references('type_id')

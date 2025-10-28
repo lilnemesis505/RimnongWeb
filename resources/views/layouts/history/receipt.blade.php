@@ -41,7 +41,7 @@
     // วนลูปเพื่อหา "ราคาเต็ม"
     foreach ($order->details as $detail) {
         if ($detail->product) {
-            $originalTotal += $detail->product->pro_price * $detail->amount;
+            $originalTotal += $detail->product->price * $detail->amount;
         } else {
             $originalTotal += $detail->pay_total; // Fallback
         }
@@ -50,7 +50,6 @@
     // ส่วนลดที่แท้จริง
     $totalDiscount = $originalTotal - $netTotal;
     
-    // ดึงชื่อโปรโมชั่นทั้งหมด
     $promoNames = $order->promotions->isNotEmpty() ? $order->promotions->pluck('promo_name')->implode(', ') : 'ไม่มี';
 @endphp
 
@@ -106,7 +105,6 @@
                     </div>
 
                     <div class="receipt-body">
-                        {{-- ... (ส่วนรายการสินค้า เหมือนเดิม) ... --}}
                         @foreach($order->details as $detail)
                             <div class="item-row">
                                 <span>{{ $detail->product->pro_name ?? 'ไม่ระบุ' }} (x{{ $detail->amount }})</span>
@@ -117,7 +115,6 @@
                     
                     <hr class="my-2">
 
-                    {{-- ✅ [FIX] แก้ไขส่วนสรุปยอดทั้งหมด --}}
                     <div class="d-flex justify-content-between mb-1">
                         <span>ราคารวมสินค้า:</span>
                         <span>{{ number_format($originalTotal, 2) }} บาท</span>
@@ -151,7 +148,6 @@
     </div>
 </div>
 <div class="d-flex justify-content-end align-items-center mb-4 mr-4 no-print">
-    {{-- ... (ส่วนปุ่ม Print เหมือนเดิม) ... --}}
     <a href="{{ route('history.index') }}" class="btn btn-secondary mr-2">
         <i class="fas fa-arrow-left"></i> กลับ
     </a>

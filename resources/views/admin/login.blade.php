@@ -15,6 +15,19 @@
             font-family: 'Segoe UI', sans-serif;
         }
 
+        /* ✅ [เพิ่ม] คัดลอก Background จาก register.blade.php มาใส่ */
+        body::before {
+            content: "";
+            position: fixed; /* ใช้ fixed เพื่อให้เต็มจอ */
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: url('https://gencraft.com/api_resources/images/model_previews/core_image_v3_flux_schnell.jpg?noCors=2');
+            background-size: cover;
+            background-position: center;
+            filter: blur(8px);
+            z-index: -1;
+        }
+
         /* ... (style อื่นๆ เหมือนเดิม) ... */
         .login-box {
             position: relative;
@@ -56,14 +69,11 @@
     <div class="login-box">
         <h2><i class="fas fa-user-shield"></i> เข้าสู่ระบบผู้ดูแลระบบ</h2>
 
-        {{-- แสดง Error (ถ้า Login ไม่ผ่าน) --}}
         @if ($errors->any())
             <div class="error-message">
-                {{ $errors->first('login') }}
             </div>
         @endif
 
-        {{-- ✅ [เพิ่ม] แสดงข้อความ Success (เช่น "สมัครสำเร็จ") --}}
         @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}

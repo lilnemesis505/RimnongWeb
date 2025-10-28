@@ -18,6 +18,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\HomeController; 
 use App\Http\Controllers\Auth\AdminForgotPasswordController;
+use App\Http\Controllers\WithdrawalController;
 
 // login Admin
 Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('login');
@@ -89,6 +90,9 @@ Route::middleware('admin.auth')->group(function () {
     Route::get('/stocks/{id}/edit', [StockMatController::class, 'edit'])->name('stock.edit');
     Route::put('/stocks/{id}', [StockMatController::class, 'update'])->name('stock.update');
     Route::delete('/stocks/{id}', [StockMatController::class, 'destroy'])->name('stock.destroy');
+    //เบิกวัตถุดิบ
+   Route::get('/withdraw/create', [WithdrawalController::class, 'create'])->name('withdraw.create');
+   Route::post('/withdraw', [WithdrawalController::class, 'store'])->name('withdraw.store');
 
     // promotion
     Route::get('/promotions', [PromotionController::class, 'index'])->name('promotion.index');

@@ -8,6 +8,8 @@ class StockMat extends Model
 {
     protected $table = 'stock_mat';
     protected $primaryKey = 'mat_id'; 
+    public $timestamps = false; 
+
     protected $fillable = [
         'mat_name',
         'type_id',
@@ -17,12 +19,13 @@ class StockMat extends Model
         'remain',
         'unitcost',
         'status',
+        'image',      
+        'image_id',
     ];
-    public $timestamps = false; 
 
     public function type()
-{
-    return $this->belongsTo(Protype::class, 'type_id');
-}
+    {
+        return $this->belongsTo(Protype::class, 'type_id');
+    }
 
 }
