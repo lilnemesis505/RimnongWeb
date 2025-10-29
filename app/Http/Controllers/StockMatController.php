@@ -70,9 +70,8 @@ class StockMatController extends Controller
             StockAdjustment::create([
                 'stock_mat_id' => $mat->mat_id,
                 'admin_id'     => $admin_id,
-                'reason_type'  => 'สร้างใหม่',
-                'change_amount' => $mat->remain, // ยอดที่เพิ่มคือยอดตั้งต้น
-                'new_remain'   => $mat->remain   // ยอดคงเหลือ
+                'amount'       => $mat->remain, // 👈 จำนวนที่เพิ่ม
+                'adjust_date'  => now()
             ]);
 
             // 3. (เหมือนเดิม) อัปโหลดรูปภาพ
@@ -155,8 +154,8 @@ class StockMatController extends Controller
                     'stock_mat_id' => $mat->mat_id,
                     'admin_id'     => $admin_id,
                     'reason_type'  => 'ปรับยอด',
-                    'change_amount' => $manual_change, // (อาจจะติดลบหรือบวก)
-                    'new_remain'   => $current_remain_in_logic
+                    'amount'       => $manual_change, // 👈 จำนวนที่เปลี่ยน (บวก/ลบ)
+                    'adjust_date'  => now()
                 ]);
             }
 
@@ -167,9 +166,8 @@ class StockMatController extends Controller
                 StockAdjustment::create([ // 👈 บันทึก Log
                     'stock_mat_id' => $mat->mat_id,
                     'admin_id'     => $admin_id,
-                    'reason_type'  => 'รับเข้าสต็อก',
-                    'change_amount' => $stockToAdd, // (บวกเสมอ)
-                    'new_remain'   => $current_remain_in_logic
+                    'amount'       => $stockToAdd, // 👈 จำนวนที่เพิ่ม (บวก)
+                    'adjust_date'  => now()
                 ]);
                 
                 // ตั้งค่าสำหรับอัปเดตตารางหลัก
@@ -236,8 +234,8 @@ class StockMatController extends Controller
                 'stock_mat_id' => $mat->mat_id,
                 'admin_id'     => $admin_id,
                 'reason_type'  => 'ลบสินค้า',
-                'change_amount' => -($mat->remain), // ลบยอดที่เหลือทั้งหมด
-                'new_remain'   => 0
+'amount'       => -($mat->remain), // 👈 จำนวนที่ลบ (ติดลบ)
+                'adjust_date'  => now()
             ]);
             
             // (ImageKit delete... เหมือนเดิม)

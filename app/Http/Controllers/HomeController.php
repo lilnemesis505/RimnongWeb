@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use App\Models\Product;
 use App\Models\Receipt;
 use App\Models\MaterialWithdrawal;
+use App\Models\StockAdjustment;
 
 class HomeController extends Controller
 {
@@ -66,6 +67,10 @@ class HomeController extends Controller
                                              ->orderBy('withdraw_date', 'desc')
                                              ->limit(5) // เอาแค่ 5 รายการล่าสุด
                                              ->get();
+            $latestAdjustments = StockAdjustment::with('admin', 'stockMat')
+                                ->orderBy('adjust_date', 'desc') // 👈 [แก้ไข]
+                                ->limit(20)
+                                ->get();
         
         // === 4. ส่งข้อมูลทั้งหมดไปยัง View ===
         return view('welcome', compact(
@@ -76,7 +81,8 @@ class HomeController extends Controller
             'activePromotions',
             'productCount',
             'stockItemCount',
-            'latestWithdrawals'
+            'latestWithdrawals',
+            'latestAdjustments'
         ));
     }
 }

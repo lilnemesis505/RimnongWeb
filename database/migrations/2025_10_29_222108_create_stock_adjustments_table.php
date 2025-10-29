@@ -12,12 +12,9 @@ return new class extends Migration
             $table->id('adjustment_id');
             $table->unsignedBigInteger('stock_mat_id');
             $table->unsignedBigInteger('admin_id');
-            
-            $table->string('reason_type', 50); 
-            $table->integer('change_amount');  
-            $table->integer('new_remain');     
-            
-            $table->timestamps(); 
+            $table->integer('amount');    
+            $table->dateTime('adjust_date'); 
+           
 
             // [FIX 6] Change 'stock_mats' to 'stock_mat'
             $table->foreign('stock_mat_id')
