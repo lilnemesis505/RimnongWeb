@@ -84,6 +84,7 @@
                             <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link"><i class="far fa-circle nav-icon text-teal"></i> <p>รายงานการขายสินค้า</p></a></li>
                             <li class="nav-item"><a href="{{ route('report.bills') }}" class="nav-link"><i class="far fa-circle nav-icon text-purple"></i> <p>รายงานยอดขาย</p></a></li>
                             <li class="nav-item"><a href="#" class="nav-link"><i class="far fa-circle nav-icon text-orange"></i> <p>รายงานการเบิกวัตถุดิบ</p></a></li>
+                            <li class="nav-item"><a href="#" class="nav-link"><i class="far fa-circle nav-icon text-orange"></i> <p>รายงานกาปรับยอด</p></a></li>
                         </ul>
                     </li>
                     <li class="nav-header">อื่นๆ</li>
