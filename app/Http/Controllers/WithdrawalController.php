@@ -11,12 +11,10 @@ use Illuminate\Validation\Rule;
 
 class WithdrawalController extends Controller
 {
-    /**
-     * แสดงหน้าฟอร์มเบิกวัตถุดิบ
-     */
+
     public function create()
     {
-        // ... (โค้ด create เหมือนเดิม) ...
+
         $stockMaterials = StockMat::where('remain', '>', 0)
                                   ->with('type')
                                   ->orderBy('mat_name')
@@ -24,12 +22,10 @@ class WithdrawalController extends Controller
         return view('layouts.stock.withdraw', compact('stockMaterials'));
     }
 
-    /**
-     * บันทึกการเบิกวัตถุดิบ
-     */
+
     public function store(Request $request)
     {
-        // ... (Validation และ ตรวจสอบ Stock เหมือนเดิม) ...
+
         $request->validate([
             'mat_id' => 'required|integer|exists:stock_mat,mat_id',
             'withdraw_amount' => 'required|integer|min:1',
@@ -45,9 +41,8 @@ class WithdrawalController extends Controller
 
         $calculatedCost = $request->withdraw_amount * $stock->unitcost;
 
-        // ✅ [FIX] เปลี่ยนวิธีดึง Admin ID
-        // $adminId = Auth::guard('admin')->id(); // <-- ลบบรรทัดนี้
-        $adminId = session('admin_id');         // <-- ใช้บรรทัดนี้แทน
+
+        $adminId = session('admin_id');         
 
         // ตรวจสอบว่าดึง ID จาก Session ได้หรือไม่
         if (!$adminId) {

@@ -8,40 +8,61 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Session; 
 use Illuminate\Support\Facades\Auth; 
+
 class AdminLoginController extends Controller
 {
     public function showLoginForm()
     {
-        return view('admin.login'); // สร้าง view นี้ด้านล่าง
+        return view('admin.login'); 
     }
 
+    // ----------------------------------------------------------------
+    // [แก้ไข] ฟังก์ชัน login
+    // ----------------------------------------------------------------
     public function login(Request $request)
-{
-    $request->validate([
-        'username' => 'required',
-        'password' => 'required',
-    ]);
+    {
+        // 1. [แก้ไข] อัปเดต Validation rule
+        $request->validate([
+            'login_identity' => 'required|string', // เปลี่ยนจาก 'username'
+            'password'       => 'required',
+        ], [
+            // [เพิ่ม] ข้อความแจ้งเตือนสำหรับ field ใหม่
+            'login_identity.required' => 'กรุณากรอกชื่อผู้ใช้ หรือ อีเมล',
+            'password.required'       => 'กรุณากรอกรหัสผ่าน',
+        ]);
+        
+        // 2. [แก้ไข] ตรรกะการค้นหา (Username หรือ Email)
+        $loginIdentity = $request->input('login_identity');
+        
+        // ตรวจสอบว่าค่าที่กรอกมาเป็น Email หรือ Username
+        $field = filter_var($loginIdentity, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
 
-    $admin = Admin::where('username', $request->username)->first();
+        // ค้นหา Admin ด้วย field ที่ถูกต้อง
+        $admin = Admin::where($field, $loginIdentity)->first();
 
-    if ($admin && Hash::check($request->password, $admin->password)) {
+        // 3. [คงเดิม] ตรวจสอบรหัสผ่าน
+        if ($admin && Hash::check($request->password, $admin->password)) {
 
-        session(['admin_id' => $admin->admin_id, 'admin_fullname' => $admin->fullname]); 
-        return redirect()->route('welcome');
+            session(['admin_id' => $admin->admin_id, 'admin_fullname' => $admin->fullname]); 
+            return redirect()->route('welcome');
+        }
+        
+        // 4. [แก้ไข] ส่ง Error กลับไป พร้อมข้อมูลที่กรอกไว้ (ยกเว้นรหัสผ่าน)
+        return back()->withErrors(['login' => 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง'])
+                     ->withInput($request->only('login_identity')); 
     }
-    return back()->withErrors(['login' => 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง']);
-}
 
 
     public function logout(Request $request)
-{
-    session()->forget('admin_id');
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
+    {
+        session()->forget('admin_id');
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-    return redirect()->route('login');
-}
-public function showRegistrationForm()
+        return redirect()->route('login');
+    }
+
+    public function showRegistrationForm()
     {
         return view('admin.register');
     }
@@ -49,13 +70,14 @@ public function showRegistrationForm()
  
     public function register(Request $request)
     {
+        // ... (ส่วนของ register เหมือนเดิม ไม่มีการเปลี่ยนแปลง) ...
         // 1. ตรวจสอบข้อมูล
         $rules = [
             'fullname'  => 'required|string|max:255',
             'username'  => 'required|string|max:255|unique:admin,username',
             'email'     => 'required|string|email|max:255|unique:admin,email',
             'admin_tel' => 'required|string|digits:10|unique:admin,admin_tel',
-            'password'  => 'required|string|min:8|confirmed', // (min:8 และ confirmed ตามที่คุณเคยขอ)
+            'password'  => 'required|string|min:8|confirmed', 
         ];
 
         $messages = [
@@ -78,7 +100,7 @@ public function showRegistrationForm()
         if ($validator->fails()) {
             return redirect()->route('admin.register.form')
                         ->withErrors($validator)
-                        ->withInput(); // ส่งข้อมูลเก่ากลับไปกรอกในฟอร์ม
+                        ->withInput(); 
         }
 
         // 2. สร้าง Admin
@@ -88,7 +110,7 @@ public function showRegistrationForm()
                 'username'  => $request->username,
                 'email'     => $request->email,
                 'admin_tel' => $request->admin_tel,
-                'password'  => Hash::make($request->password), // Hash รหัสผ่าน
+                'password'  => Hash::make($request->password), 
             ]);
         } catch (\Exception $e) {
             return redirect()->route('admin.register.form')
@@ -100,7 +122,3 @@ public function showRegistrationForm()
         return redirect()->route('login')->with('success', 'สมัครสมาชิกสำเร็จ กรุณาเข้าสู่ระบบ');
     }
 }
-
-
-
-

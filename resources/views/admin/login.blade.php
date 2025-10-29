@@ -15,10 +15,9 @@
             font-family: 'Segoe UI', sans-serif;
         }
 
-        /* ✅ [เพิ่ม] คัดลอก Background จาก register.blade.php มาใส่ */
         body::before {
             content: "";
-            position: fixed; /* ใช้ fixed เพื่อให้เต็มจอ */
+            position: fixed; 
             top: 0; left: 0;
             width: 100%; height: 100%;
             background-image: url('https://gencraft.com/api_resources/images/model_previews/core_image_v3_flux_schnell.jpg?noCors=2');
@@ -28,7 +27,6 @@
             z-index: -1;
         }
 
-        /* ... (style อื่นๆ เหมือนเดิม) ... */
         .login-box {
             position: relative;
             z-index: 1;
@@ -71,9 +69,11 @@
 
         @if ($errors->any())
             <div class="error-message">
+                @foreach ($errors->all() as $error)
+                    {{ $error }}<br>
+                @endforeach
             </div>
         @endif
-
         @if (session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
@@ -88,8 +88,14 @@
 
         <form method="POST" action="{{ route('login.submit') }}">
             @csrf
-            <label for="username">ชื่อผู้ใช้</label>
-            <input type="text" name="username" id="username" class="form-control" required>
+            
+            <label for="login_identity">ชื่อผู้ใช้ หรือ อีเมล</label>
+            <input type="text" 
+                   name="login_identity" 
+                   id="login_identity" 
+                   class="form-control" 
+                   value="{{ old('login_identity') }}" 
+                   required>
 
             <label for="password">รหัสผ่าน</label>
             <input type="password" name="password" id="password" class="form-control" required>

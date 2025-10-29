@@ -102,14 +102,13 @@
 
                     {{-- ✅ 4. ปรับปรุง Input รูปภาพให้สวยงาม --}}
                     <div class="form-group">
-                        <label for="image">รูปสินค้า</label>
+                        <label for="image">รูปสินค้า(รองรับ jpg,jpeg,png)</label>
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="image" name="image" accept="image/*">
                             <label class="custom-file-label" for="image">เลือกไฟล์...</label>
                         </div>
                     </div>
                     
-                    {{-- ✅ 5. เพิ่มส่วนแสดงตัวอย่างรูปภาพ --}}
                     <div id="image-preview-container" class="text-center">
                         <img id="image-preview" src="#" alt="Image Preview"/>
                     </div>

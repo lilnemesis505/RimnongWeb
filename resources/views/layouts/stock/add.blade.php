@@ -40,7 +40,6 @@
             </nav>
         </div>
     </aside>
-
     <div class="content-wrapper p-3">
         <div class="card card-primary">
             <div class="card-header">
@@ -51,7 +50,7 @@
                 @csrf
                 <div class="card-body">
 
-                    {{-- ✅ [FIX] เพิ่มส่วนแสดงผล Error --}}
+                    {{-- (ส่วนแสดงผล Error เหมือนเดิม) --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <h5 class="font-weight-bold">เกิดข้อผิดพลาด!</h5>
@@ -87,10 +86,12 @@
                         </select>
                     </div>
 
+                    {{--
                     <div class="form-group">
                         <label>วันที่นำเข้า</label>
                         <input type="date" name="import_date" class="form-control" value="{{ old('import_date') }}" required>
                     </div>
+                    --}}
 
                     <div class="form-group">
                         <label>จำนวนที่นำเข้า</label>
@@ -102,16 +103,19 @@
                         <input type="date" name="exp_date" class="form-control" value="{{ old('exp_date') }}">
                     </div>
 
+                    {{--
                     <div class="form-group">
                         <label>จำนวนคงเหลือ</label>
                         <input type="number" name="remain" class="form-control" value="{{ old('remain') }}" required>
                     </div>
+                    --}}
 
                     <div class="form-group">
                         <label>ราคาต่อหน่วย</label>
                         <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ old('unitcost') }}" required>
                     </div>
 
+                    {{--
                     <div class="form-group">
                         <label>สถานะ</label>
                         <select name="status" class="form-control" required>
@@ -120,6 +124,7 @@
                             <option value="2" {{ old('status') == '2' ? 'selected' : '' }}>หมด และสั่งซื้อแต่ยังไม่ได้รับ</option>
                         </select>
                     </div>
+                    --}}
 
                     <div class="form-group">
                         <label for="image_upload">รูปภาพวัสดุ (รองรับ .jpg, .png)</label>

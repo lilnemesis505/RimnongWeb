@@ -89,7 +89,7 @@
             <input type="text" name="admin_tel" id="admin_tel" class="form-control" value="{{ old('admin_tel') }}" required maxlength="10">
             @error('admin_tel') <div class="error-message">{{ $message }}</div> @enderror
 
-            <label for="password">รหัสผ่าน</label>
+            <label for="password">รหัสผ่าน(8ตัวอักษรขึ้นไป)</label>
             <input type="password" name="password" id="password" class="form-control" required>
             @error('password') <div class="error-message">{{ $message }}</div> @enderror
 

@@ -105,7 +105,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="image">เลือกรูปใหม่ (ถ้าต้องการเปลี่ยน)</label>
+                        <label for="image">เลือกรูปใหม่ (ถ้าต้องการเปลี่ยน) (รองรับ jpg,jpeg,png)</label>
                         <div class="custom-file">
                             <input type="file" class="custom-file-input" id="image" name="image" accept="image/*">
                             <label class="custom-file-label" for="image">เลือกไฟล์...</label>
@@ -114,7 +114,7 @@
                     
                     <div id="image-preview-container" class="text-center">
                         <label class="d-block">รูปปัจจุบัน:</label>
-                        {{-- แสดงรูปปัจจุบัน ถ้ามี --}}
+                
                         <img id="image-preview" 
                              src="{{ $product->image ? $product->image : 'https://via.placeholder.com/250x250.png?text=No+Image' }}" 
                              alt="Image Preview"/>
@@ -129,7 +129,6 @@
                         </button>
                     </div>
                     <div>
-                        {{-- แยกปุ่มลบออกมาอยู่คนละ form เพื่อความปลอดภัย --}}
                         <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#deleteModal">
                             <i class="fas fa-trash-alt"></i> ลบข้อมูล
                         </button>

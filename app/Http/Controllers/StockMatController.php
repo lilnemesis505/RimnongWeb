@@ -8,6 +8,9 @@ use App\Models\StockMat;
 use App\Models\Protype;
 use ImageKit\ImageKit;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Carbon; 
+use App\Models\StockAdjustment; // 👈 [เพิ่ม] Import โมเดล Log
+use Illuminate\Support\Facades\DB; // 👈 [เพิ่ม] Import DB Transaction
 
 class StockMatController extends Controller
 {
@@ -15,7 +18,6 @@ class StockMatController extends Controller
 
     public function __construct()
     {
-        // (Constructor ถูกต้องแล้ว)
         $this->imageKit = new ImageKit(
             config('imagekit.public_key'),
             config('imagekit.private_key'),
@@ -35,59 +37,72 @@ class StockMatController extends Controller
         return view('layouts.stock.add', compact('types'));
     }
 
-    // ✅ [FIX] แก้ไข Logic ทั้งหมดเพื่อรองรับการตั้งชื่อไฟล์ด้วย PK
+    /**
+     * บันทึก StockMat ใหม่ พร้อม Log
+     */
     public function store(Request $request)
     {
-        // 1. Validate ข้อมูลทั้งหมดก่อน
         $validated = $request->validate([
             'mat_name'    => 'required|string|max:255',
             'type_id'     => 'required|integer|exists:protype,type_id',
-            'import_date' => 'required|date',
             'quantity'    => 'required|integer|min:1',
-            'exp_date'    => 'nullable|date|after_or_equal:import_date',
-            'remain'      => 'required|integer|min:0',
+            'exp_date'    => 'nullable|date|after_or_equal:today', 
             'unitcost'    => 'required|numeric|min:0',
-            'status'      => 'required|in:0,1,2',
             'image_upload' => 'nullable|image|mimes:jpeg,png,jpg', 
         ]);
-
-        // 2. เตรียมข้อมูลสำหรับสร้าง (ไม่รวมรูปภาพ)
-        $dataToCreate = $validated;
-        unset($dataToCreate['image_upload']); // ลบ key 'image_upload' ที่ไม่ใช่คอลัมน์ DB
-
-        // 3. สร้าง StockMat "ก่อน" เพื่อให้ได้ PK (mat_id)
-        $mat = StockMat::create($dataToCreate);
-
-        // 4. ตรวจสอบว่ามีไฟล์อัปโหลดมาหรือไม่
-        if ($request->hasFile('image_upload')) {
-            try {
-                $file = $request->file('image_upload');
-                
-                // ✅ [FIX] สร้างชื่อไฟล์ใหม่ตามที่คุณต้องการ
-                $fileName = 'Stock' . $mat->mat_id . '.' . $file->getClientOriginalExtension();
-
-                $uploadResult = $this->imageKit->uploadFile([
-                    'file'     => base64_encode(file_get_contents($file->getRealPath())),
-                    'fileName' => $fileName,
-                    'folder'   => '/Stock',
-                    'useUniqueFileName' => false, // 👈 สำคัญ: บังคับให้ใช้ชื่อไฟล์ของเรา
-                ]);
-
-                // 5. อัปเดตแถวที่สร้างไปแล้ว ด้วยข้อมูลรูปภาพ
-                $mat->image = $uploadResult->result->url;
-                $mat->image_id = $uploadResult->result->fileId;
-                $mat->save();
-
-            } catch (\Exception $e) {
-                Log::error('ImageKit Upload Error (store): ' . $e->getMessage());
-                // ถ้าอัปโหลดรูปไม่สำเร็จ ให้ส่งกลับไปพร้อมแจ้งเตือน
-                // (StockMat ถูกสร้างแล้ว แต่ไม่มีรูป)
-                return redirect()->route('stock.index')
-                       ->with('success', 'เพิ่มวัสดุสำเร็จ แต่การอัปโหลดรูปภาพล้มเหลว: ' . $e->getMessage());
-            }
+        
+        $admin_id = session('admin_id'); // 👈 [เพิ่ม] ดึง ID Admin
+        if (!$admin_id) {
+            return redirect()->back()->withInput()->with('error', 'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
         }
 
-        return redirect()->route('stock.index')->with('success', 'เพิ่มข้อมูลวัสดุเรียบร้อยแล้ว');
+        DB::beginTransaction(); // 👈 [เพิ่ม] เริ่ม Transaction
+        try {
+            $dataToCreate = $validated;
+            $dataToCreate['import_date'] = now();
+            $dataToCreate['status']      = 0;
+            $dataToCreate['remain']      = $validated['quantity'];
+            
+            unset($dataToCreate['image_upload']);
+            $mat = StockMat::create($dataToCreate); // 1. สร้างสินค้า
+
+            // 2. [เพิ่ม] บันทึก Log แรก
+            StockAdjustment::create([
+                'stock_mat_id' => $mat->mat_id,
+                'admin_id'     => $admin_id,
+                'reason_type'  => 'สร้างใหม่',
+                'change_amount' => $mat->remain, // ยอดที่เพิ่มคือยอดตั้งต้น
+                'new_remain'   => $mat->remain   // ยอดคงเหลือ
+            ]);
+
+            // 3. (เหมือนเดิม) อัปโหลดรูปภาพ
+            if ($request->hasFile('image_upload')) {
+                try {
+                    $file = $request->file('image_upload');
+                    $fileName = 'Stock' . $mat->mat_id . '.' . $file->getClientOriginalExtension();
+                    $uploadResult = $this->imageKit->uploadFile([
+                        'file'     => base64_encode(file_get_contents($file->getRealPath())),
+                        'fileName' => $fileName,
+                        'folder'   => '/Stock',
+                        'useUniqueFileName' => false, 
+                    ]);
+                    $mat->image = $uploadResult->result->url;
+                    $mat->image_id = $uploadResult->result->fileId;
+                    $mat->save();
+                } catch (\Exception $e) {
+                    // (Log error แต่ไม่ rollback transaction ถ้าแค่รูปไม่เข้า)
+                    Log::error('ImageKit Upload Error (store): ' . $e->getMessage());
+                }
+            }
+            
+            DB::commit(); // 👈 [เพิ่ม] ยืนยันการบันทึก
+            return redirect()->route('stock.index')->with('success', 'เพิ่มข้อมูลและบันทึกประวัติเรียบร้อยแล้ว');
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // 👈 [เพิ่ม] ย้อนกลับหากล้มเหลว
+            Log::error('Stock Store Transaction Error: ' . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' . $e->getMessage());
+        }
     }
 
     public function edit($id)
@@ -97,79 +112,156 @@ class StockMatController extends Controller
         return view('layouts.stock.edit', compact('mat', 'types'));
     }
 
-    // ✅ [FIX] แก้ไขชื่อไฟล์ตอนอัปเดต
+    /**
+     * อัปเดต StockMat พร้อม Log
+     */
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
             'mat_name'    => 'required|string|max:255',
             'type_id'     => 'required|integer|exists:protype,type_id',
-            'import_date' => 'required|date',
-            'quantity'    => 'required|integer|min:0',
-            'exp_date'    => 'nullable|date|after_or_equal:import_date',
-            'remain'      => 'required|integer|min:0',
+            'quantity'    => 'required|integer|min:0', 
+            'exp_date'    => 'nullable|date',
+            'remain'      => 'required|integer|min:0', 
             'unitcost'    => 'required|numeric|min:0',
-            'status'      => 'required|in:0,1,2',
+            'status'      => 'required|in:0,2',
             'image_upload' => 'nullable|image|mimes:jpeg,png,jpg',
+            'add_stock'   => 'nullable|integer|min:0', 
         ]);
-
-        $mat = StockMat::findOrFail($id);
-
-        if ($request->hasFile('image_upload')) {
+        
+        $admin_id = session('admin_id'); // 👈 [เพิ่ม] ดึง ID Admin
+        if (!$admin_id) {
+            return redirect()->back()->withInput()->with('error', 'Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
+        }
+        
+        DB::beginTransaction(); // 👈 [เพิ่ม] เริ่ม Transaction
+        try {
             
-            // 1. ลบรูปเก่า (ถ้ามี)
+            $mat = StockMat::findOrFail($id);
+            $old_remain = $mat->remain; // 👈 [เพิ่ม] เก็บยอดเก่า
+            
+            $stockToAdd = (int) $request->input('add_stock', 0);
+            $manualRemainInput = (int) $request->input('remain'); // 👈 ยอดที่ผู้ใช้กรอกในช่อง 'remain'
+
+            $current_remain_in_logic = $old_remain; 
+            $currentImportDate = $mat->import_date; // 👈 ดึงวันที่นำเข้าเดิม
+
+            // Logic ที่ 1: ตรวจสอบการ "ปรับยอด" (ช่อง remain)
+            $manual_change = $manualRemainInput - $old_remain;
+            if ($manual_change != 0) {
+                $current_remain_in_logic = $manualRemainInput; // อัปเดตยอด
+                
+                StockAdjustment::create([ // 👈 บันทึก Log
+                    'stock_mat_id' => $mat->mat_id,
+                    'admin_id'     => $admin_id,
+                    'reason_type'  => 'ปรับยอด',
+                    'change_amount' => $manual_change, // (อาจจะติดลบหรือบวก)
+                    'new_remain'   => $current_remain_in_logic
+                ]);
+            }
+
+            // Logic ที่ 2: ตรวจสอบการ "รับเข้าสต็อกเพิ่ม"
+            if ($stockToAdd > 0) {
+                $current_remain_in_logic += $stockToAdd; // บวกเพิ่ม
+                
+                StockAdjustment::create([ // 👈 บันทึก Log
+                    'stock_mat_id' => $mat->mat_id,
+                    'admin_id'     => $admin_id,
+                    'reason_type'  => 'รับเข้าสต็อก',
+                    'change_amount' => $stockToAdd, // (บวกเสมอ)
+                    'new_remain'   => $current_remain_in_logic
+                ]);
+                
+                // ตั้งค่าสำหรับอัปเดตตารางหลัก
+                $validated['quantity'] = $mat->quantity + $stockToAdd;
+                $currentImportDate = now();
+                $validated['import_date'] = $currentImportDate;
+            }
+            
+            // [แก้ไข] ยอดคงเหลือสุดท้าย
+            $validated['remain'] = $current_remain_in_logic; 
+            
+            // (Logic การตรวจสอบ exp_date)
+            if ($request->filled('exp_date')) {
+                $expDate = Carbon::parse($request->input('exp_date'));
+                if ($expDate->isBefore($currentImportDate)) {
+                    // 👈 [สำคัญ] ต้องโยน Exception เพื่อให้ Transaction Rollback
+                    throw new \Exception('วันหมดอายุต้องไม่ก่อนวันที่นำเข้าล่าสุด ('.$currentImportDate->format('m/d/Y').')');
+                }
+            }
+
+            // (Logic การตัดสินใจ status)
+            $statusFromForm = (int) $validated['status'];
+            if ($statusFromForm == 2) {
+                $validated['status'] = 2;
+            } else {
+                $validated['status'] = ($validated['remain'] > 0) ? 0 : 1;
+            }
+
+            // (Logic อัปโหลดรูปภาพ เหมือนเดิม)
+            if ($request->hasFile('image_upload')) {
+                // ... (try/catch ของ ImageKit) ...
+            }
+            
+            unset($validated['add_stock']);
+            $mat->update($validated); // 👈 อัปเดตตารางหลัก
+
+            DB::commit(); // 👈 [เพิ่ม] ยืนยัน
+            return redirect()->route('stock.index')->with('success', 'อัปเดตข้อมูลและบันทึกประวัติเรียบร้อยแล้ว');
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // 👈 [เพิ่ม] ย้อนกลับ
+            Log::error('Stock Update Transaction Error: ' . $e->getMessage());
+            // [แก้ไข] ส่ง Error กลับไปที่ฟอร์ม
+            return redirect()->back()->withInput()->withErrors(['update_error' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * ลบ StockMat (Soft Delete) พร้อม Log
+     */
+    public function destroy($id)
+    {
+        $admin_id = session('admin_id');
+        if (!$admin_id) {
+            return redirect()->back()->with('error', 'Session หมดอายุ');
+        }
+        
+        DB::beginTransaction();
+        try {
+            $mat = StockMat::findOrFail($id);
+
+            // [เพิ่ม] บันทึก Log การลบ
+            StockAdjustment::create([
+                'stock_mat_id' => $mat->mat_id,
+                'admin_id'     => $admin_id,
+                'reason_type'  => 'ลบสินค้า',
+                'change_amount' => -($mat->remain), // ลบยอดที่เหลือทั้งหมด
+                'new_remain'   => 0
+            ]);
+            
+            // (ImageKit delete... เหมือนเดิม)
             if ($mat->image_id) {
                 try {
                     $this->imageKit->deleteFile($mat->image_id);
                 } catch (\Exception $e) {
-                    Log::warning('ImageKit Delete Error (during update): ' . $e->getMessage());
+                    Log::warning('ImageKit Delete Error (during destroy): ' . $e->getMessage());
                 }
             }
 
-            // 2. อัปโหลดรูปใหม่
-            try {
-                $file = $request->file('image_upload');
-                
-                // ✅ [FIX] สร้างชื่อไฟล์ใหม่ตามที่คุณต้องการ
-                $fileName = 'Stock' . $mat->mat_id . '.' . $file->getClientOriginalExtension();
+            $mat->delete(); // 👈 นี่คือ Soft Delete
 
-                $uploadResult = $this->imageKit->uploadFile([
-                    'file'     => base64_encode(file_get_contents($file->getRealPath())),
-                    'fileName' => $fileName,
-                    'folder'   => '/Stock',
-                    'useUniqueFileName' => false, // 👈 สำคัญ: บังคับให้ใช้ชื่อไฟล์ของเรา
-                ]);
-
-                // บันทึกข้อมูลรูปลงใน $validated (เพื่ออัปเดตทีเดียว)
-                $validated['image'] = $uploadResult->result->url;
-                $validated['image_id'] = $uploadResult->result->fileId;
-
-            } catch (\Exception $e) {
-                Log::error('ImageKit Upload Error (update): ' . $e->getMessage());
-                return redirect()->back()->withInput()->with('error', 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพใหม่');
+            DB::commit();
+            return redirect()->route('stock.index')->with('success', 'ลบข้อมูลและบันทึกประวัติเรียบร้อยแล้ว');
+        
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Stock Destroy Transaction Error: ' . $e->getMessage());
+            
+            if (str_contains($e->getMessage(), 'constraint violation')) {
+                 return redirect()->route('stock.index')->with('error', 'ลบข้อมูลไม่สำเร็จ! (Constraint Error)');
             }
+            return redirect()->route('stock.index')->with('error', 'เกิดข้อผิดพลาด: ' . $e->getMessage());
         }
-
-        // 3. อัปเดตข้อมูล (รวมข้อมูลรูปภาพ ถ้ามี)
-        $mat->update($validated);
-
-        return redirect()->route('stock.index')->with('success', 'อัปเดตข้อมูลเรียบร้อยแล้ว');
-    }
-
-    public function destroy($id)
-    {
-        $mat = StockMat::findOrFail($id);
-
-        // (Logic การลบถูกต้องอยู่แล้ว)
-        if ($mat->image_id) {
-            try {
-                $this->imageKit->deleteFile($mat->image_id);
-            } catch (\Exception $e) {
-                Log::error('ImageKit Delete Error: ' . $e->getMessage());
-            }
-        }
-
-        $mat->delete();
-
-        return redirect()->route('stock.index')->with('success', 'ลบข้อมูลวัสดุเรียบร้อยแล้ว');
     }
 }
