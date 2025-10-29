@@ -77,5 +77,4 @@ class WithdrawalController extends Controller
             return redirect()->back()->withInput()->withErrors(['general' => 'เกิดข้อผิดพลาดในการบันทึก: ' . $e->getMessage()]);
         }
     }
-    
-  
+}
