@@ -20,7 +20,7 @@ return new class extends Migration
             $table->integer('withdraw_amount'); // จำนวนที่เบิก
             $table->decimal('calculated_cost', 10, 2); // ราคาที่คำนวณได้
             
-            $table->timestamps(); // จะสร้าง created_at (ใช้แทน withdraw_date) และ updated_at
+            $table->dateTime('withdraw_date'); 
 
             // สร้าง Foreign Keys
             $table->foreign('mat_id')->references('mat_id')->on('stock_mat')->onDelete('restrict');

@@ -29,7 +29,7 @@ class StockAdjustment extends Model
      *
      * @var bool
      */
-    public $timestamps = true; 
+     public $timestamps = false;
     
     // (หมายเหตุ: updated_at จะถูกสร้างด้วย แต่เราจะไม่ได้ใช้มันเป็นหลัก)
 
@@ -44,6 +44,7 @@ class StockAdjustment extends Model
         'reason_type',
         'change_amount',
         'new_remain',
+        'adjust_date'
     ];
 
     /**

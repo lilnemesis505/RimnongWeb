@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\StockMat;
 use App\Models\MaterialWithdrawal;
-use Illuminate\Support\Facades\Auth; // (Use นี้อาจจะไม่จำเป็นแล้ว แต่เก็บไว้ก็ได้)
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
@@ -14,7 +14,6 @@ class WithdrawalController extends Controller
 
     public function create()
     {
-
         $stockMaterials = StockMat::where('remain', '>', 0)
                                   ->with('type')
                                   ->orderBy('mat_name')
@@ -22,14 +21,16 @@ class WithdrawalController extends Controller
         return view('layouts.stock.withdraw', compact('stockMaterials'));
     }
 
-
     public function store(Request $request)
     {
-
         $request->validate([
             'mat_id' => 'required|integer|exists:stock_mat,mat_id',
             'withdraw_amount' => 'required|integer|min:1',
-        ], [ /* ... messages ... */ ]);
+        ], [ 
+            'mat_id.required' => 'กรุณาเลือกวัตถุดิบ',
+            'withdraw_amount.required' => 'กรุณากรอกจำนวนที่ต้องการเบิก',
+            'withdraw_amount.min' => 'จำนวนที่เบิกต้องมากกว่า 0',
+        ]);
 
         $stock = StockMat::findOrFail($request->mat_id);
 
@@ -40,27 +41,30 @@ class WithdrawalController extends Controller
         }
 
         $calculatedCost = $request->withdraw_amount * $stock->unitcost;
-
-
         $adminId = session('admin_id');         
 
-        // ตรวจสอบว่าดึง ID จาก Session ได้หรือไม่
         if (!$adminId) {
-             // (เปลี่ยน Error message เล็กน้อย)
              return redirect()->back()->withInput()->withErrors(['general' => 'ไม่พบข้อมูลผู้ใช้งานใน Session']);
         }
 
-        // ... (ส่วน Transaction, Create, Save Stock เหมือนเดิม) ...
         DB::beginTransaction();
         try {
+            // [แก้ไข] เพิ่ม 'withdraw_date' => now()
             MaterialWithdrawal::create([
                 'mat_id' => $stock->mat_id,
-                'admin_id' => $adminId, // ใช้ ID จาก Session
+                'admin_id' => $adminId, 
                 'withdraw_amount' => $request->withdraw_amount,
                 'calculated_cost' => $calculatedCost,
+                'withdraw_date' => now() // 👈 เพิ่มบรรทัดนี้
             ]);
 
             $stock->remain -= $request->withdraw_amount;
+            
+            // อัปเดตสถานะ ถ้าของหมด
+            if ($stock->remain <= 0 && $stock->status != 2) { 
+                $stock->status = 1; // 1 = หมด
+            }
+            
             $stock->save();
 
             DB::commit();
@@ -73,4 +77,5 @@ class WithdrawalController extends Controller
             return redirect()->back()->withInput()->withErrors(['general' => 'เกิดข้อผิดพลาดในการบันทึก: ' . $e->getMessage()]);
         }
     }
-}
+    
+  
