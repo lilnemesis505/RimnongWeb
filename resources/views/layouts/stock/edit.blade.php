@@ -13,11 +13,17 @@
             border-radius: 5px;
             border: 1px solid #ddd;
         }
+        .readonly-field {
+            background-color: #e9ecef;
+            font-weight: bold;
+            color: #495057;
+        }
     </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
 
+    {{-- (ส่วน Navbar และ Sidebar เหมือนเดิม) --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">ข้อมูลปรับปรุงล็อตสินค้า</span>
     </nav>
@@ -55,6 +61,7 @@
             </nav>
         </div>
     </aside>
+
     <div class="content-wrapper p-3">
     <div class="card card-warning">
         <div class="card-header">
@@ -67,6 +74,7 @@
 
             <div class="card-body">
                 
+                {{-- (ส่วน Error เหมือนเดิม) --}}
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul>
@@ -82,6 +90,7 @@
                     </div>
                 @endif
                 
+                {{-- (ส่วนข้อมูลหลักและรูปภาพ เหมือนเดิม) --}}
                 <div class="form-group">
                     <label>ชื่อวัสดุ</label>
                     <input type="text" name="mat_name" class="form-control" value="{{ old('mat_name', $mat->mat_name) }}" required>
@@ -96,14 +105,6 @@
                         @endforeach
                     </select>
                 </div>
-                
-                {{--
-                <div class="form-group">
-                    <label>วันที่นำเข้า</label>
-                    <input type="date" name="import_date" class="form-control" value="{{ old('import_date', \Carbon\Carbon::parse($mat->import_date)->format('Y-m-d')) }}" required>
-                </div>
-                --}}
-
                 <div class="form-group">
                     <label>วันหมดอายุ</label>
                     <input type="date" name="exp_date" class="form-control" value="{{ old('exp_date', $mat->exp_date ? \Carbon\Carbon::parse($mat->exp_date)->format('Y-m-d') : '') }}">
@@ -123,38 +124,59 @@
                     <small class="form-text text-muted">หากไม่ต้องการเปลี่ยนรูปภาพ ให้เว้นว่างไว้</small>
                 </div>
                 <hr>
+                
+                <h4><i class="fas fa-boxes"></i> จัดการสต็อก</h4>
+                
+                {{-- แถวที่ 1: แสดงยอดคงคลัง --}}
                 <div class="row">
-                    <div class="col-md-4">
+                    <div class="col-md-6">
                         <div class="form-group">
-                            <label>รับเข้าสต็อกเพิ่ม</label>
-                            <input type="number" name="add_stock" class="form-control" value="{{ old('add_stock', 0) }}" min="0" required>
-                            <small class="form-text text-success">ยอดนี้จะถูกบวกเข้าสต็อก</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>จำนวนที่นำเข้า (สะสม)</label>
-                            <input type="number" name="quantity" class="form-control" value="{{ old('quantity', $mat->quantity) }}" readonly>
-                            <small class="form-text text-muted">ยอดสะสม (อัตโนมัติ)</small>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group">
-                            <label>จำนวนคงเหลือ (ปรับยอดได้)</label>
-                            <input type="number" name="remain" class="form-control" value="{{ old('remain', $mat->remain) }}" min="0" required>
-                            <small class="form-text text-muted">ยอดปัจจุบัน (แก้ไขได้หากนับไม่ตรง)</small>
+                            <label>จำนวนคงเหลือ (ปัจจุบัน)</label>
+                            <input type="number" class="form-control readonly-field" 
+                                   value="{{ $mat->remain }}" readonly>
+                            <small class="form-text text-muted">ยอดในระบบ (อัตโนมัติ)</small>
                         </div>
                     </div>
                 </div>
+
+                {{-- แถวที่ 2: กรอกข้อมูลการเปลี่ยนแปลง --}}
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>รับเข้าสต็อกเพิ่ม (นำเข้า)</label>
+                            <input type="number" name="add_stock" class="form-control" 
+                                   value="{{ old('add_stock', 0) }}" min="0"> 
+                            <small class="form-text text-success">กรอกยอดที่สั่งซื้อมาใหม่ (บวกเข้าสต็อก)</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>ปรับยอด (แก้ไข)</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend">
+                                    <select name="adjustment_type" class="form-control" style="border-radius: 0.25rem 0 0 0.25rem;">
+                                        <option value="add" {{ old('adjustment_type') == 'add' ? 'selected' : '' }}>ปรับขึ้น (+)</option>
+                                        <option value="subtract" {{ old('adjustment_type') == 'subtract' ? 'selected' : '' }}>ปรับลด (-)</option>
+                                    </select>
+                                </div>
+                                <input type="number" name="adjustment_amount" class="form-control" 
+                                       value="{{ old('adjustment_amount', 0) }}" min="0" required>
+                            </div>
+                            <small class="form-text text-info">ปรับยอดที่นับได้ถ้าไม่ตรงกับหน้าร้าน</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr>
                 
                 <div class="form-group">
                     <label>ราคาต่อหน่วย</label>
                     <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ old('unitcost', $mat->unitcost) }}" required>
                 </div>
 
+                {{-- (ส่วน Status เหมือนเดิม) --}}
                 <div class="form-group">
                     <label>สถานะปัจจุบัน</label><br>
-                    
                     @if($mat->status == 2)
                         <span class="badge badge-warning" style="font-size: 1rem;">รอของเข้า</span>
                     @elseif($mat->remain > 0)
@@ -163,33 +185,30 @@
                         <span class="badge badge-danger" style="font-size: 1rem;">หมด</span>
                     @endif
                 </div>
-
                 <div class="form-group">
                     <label>จัดการสถานะ</label><br>
                     <input type="hidden" name="status" value="0"> 
-                    
                     <div class="form-check">
                         <input type="checkbox" name="status" id="status_2" value="2" 
                                {{ old('status', $mat->status) == 2 ? 'checked' : '' }} 
-                               @if($mat->remain > 0 && $mat->status != 2) disabled @endif
+                               @if($mat->remain >= 3 && $mat->status != 2) disabled @endif
                                class="form-check-input">
-                               
                         <label class="form-check-label" for="status_2">
                             สั่งสินค้าแล้ว (รอของเข้า)
                         </label>
-
-                        @if($mat->remain > 0 && $mat->status != 2)
+                        
+                        @if($mat->remain >= 3 && $mat->status != 2)
                             <small class="form-text text-danger">
-                                (ไม่สามารถสั่งได้เนื่องจากยังมีสินค้าคงเหลือ)
+                                (ไม่สามารถสั่งได้เนื่องจากสินค้ายังมี 3 ชิ้นขึ้นไป)
                             </small>
                         @else
                              <small class="form-text text-muted">
-                                (ติ๊กช่องนี้เมื่อของหมดและสั่งไปแล้ว / นำติ๊กออกเมื่อของมาส่ง และกรอก "รับเข้าสต็อกเพิ่ม")
+                                (ติ๊กช่องนี้เมื่อของหมด/เหลือน้อย และสั่งไปแล้ว / นำติ๊กออกเมื่อของมาส่ง)
                             </small>
                         @endif
                     </div>
                 </div>
-                </div>
+            </div> {{-- ปิด card-body --}}
 
             <div class="card-footer d-flex justify-content-between">
                 <div>
@@ -197,7 +216,9 @@
                         <i class="fas fa-save"></i> บันทึกการแก้ไข
                     </button>
                 </div>
-        </form> 
+        </form> {{-- (ปิดฟอร์มหลัก) --}}
+        
+        {{-- (ฟอร์มลบ เหมือนเดิม) --}}
         <form action="{{ route('stock.destroy', $mat->mat_id) }}" method="POST"
               onsubmit="return confirm('คุณแน่ใจว่าต้องการลบข้อมูลนี้หรือไม่?')">
             @csrf
@@ -206,10 +227,11 @@
                 <i class="fas fa-trash-alt"></i> ลบข้อมูล
             </button>
         </form>
-            </div>
+            </div> {{-- ปิด card-footer --}}
 
-    </div>
-</div>
+    </div> {{-- ปิด card --}}
+</div> {{-- ปิด content-wrapper --}}
+</div> {{-- ปิด wrapper --}}
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>
 </html>

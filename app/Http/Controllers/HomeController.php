@@ -37,20 +37,21 @@ class HomeController extends Controller
         $customerCount = Customer::count();
         $employeeCount = Employee::count();
         $productCount = Product::count();
-        // คำนวณยอดขายจากตารางใบเสร็จ (Receipts) ซึ่งจะแม่นยำกว่า
         $totalSales = Receipt::sum('price_total');
         $stockItemCount = StockMat::count();
         $today = Carbon::today();
 
-        // === 2. ดึงวัตถุดิบที่ใกล้หมดอายุ (หมดอายุใน 7 วันข้างหน้า และยังมีของเหลือ) ===
+        // (ใช้ re_date)
+        $todaySales = Receipt::whereDate('re_date', $today)->sum('price_total');
+
+        // === 2. ดึงวัตถุดิบที่ใกล้หมดอายุ (หมดอายุใน 15 วัน) ===
         $sevenDaysFromNow = $today->copy()->addDays(15);
-        $expiringStock = StockMat::where('remain', '>', 0) // เงื่อนไข: ต้องมีของเหลือมากกว่า 0
+        $expiringStock = StockMat::where('remain', '>', 0) 
             ->whereNotNull('exp_date')
-            ->whereBetween('exp_date', [$today, $sevenDaysFromNow]) // ใช้ whereBetween เพื่อความชัดเจน
+            ->whereBetween('exp_date', [$today, $sevenDaysFromNow]) 
             ->orderBy('exp_date', 'asc')
             ->get()
             ->map(function ($stock) use ($today) {
-                // คำนวณวันที่เหลือใน Controller เพื่อให้ View แสดงผลได้เลย
                 $stock->days_to_expire = Carbon::parse($stock->exp_date)->diffInDays($today);
                 return $stock;
             });
@@ -63,13 +64,25 @@ class HomeController extends Controller
                 $promo->days_left = Carbon::parse($promo->promo_end)->diffInDays($today);
                 return $promo;
             });
-            $latestWithdrawals = MaterialWithdrawal::with(['stockMaterial', 'admin']) // โหลดชื่อวัตถุดิบ
+            
+        // 3.1 ดึง 5 การเบิกล่าสุด (สำหรับแท็บ)
+        $latestWithdrawals = MaterialWithdrawal::with(['stockMaterial', 'admin']) 
                                              ->orderBy('withdraw_date', 'desc')
-                                             ->limit(5) // เอาแค่ 5 รายการล่าสุด
+                                             ->limit(5) 
                                              ->get();
-            $latestAdjustments = StockAdjustment::with('admin', 'stockMat')
-                                ->orderBy('adjust_date', 'desc') // 👈 [แก้ไข]
+        // 3.2 ดึงการปรับยอดล่าสุด (สำหรับแท็บ)
+        $latestAdjustments = StockAdjustment::with('admin', 'stockMat')
+                                ->orderBy('adjust_date', 'desc') 
                                 ->limit(20)
+                                ->get();
+        
+        // [แก้ไข] 3.3 ดึง 5 การขายล่าสุด
+        $latestSales = Receipt::with([
+                                    'order', 
+                                    'order.employee' // 👈 [แก้ไข] เปลี่ยนจาก admin เป็น employee
+                                ])
+                                ->orderBy('re_date', 'desc') 
+                                ->limit(5)
                                 ->get();
         
         // === 4. ส่งข้อมูลทั้งหมดไปยัง View ===
@@ -82,7 +95,10 @@ class HomeController extends Controller
             'productCount',
             'stockItemCount',
             'latestWithdrawals',
-            'latestAdjustments'
+            'latestAdjustments',
+            'today',
+            'todaySales',
+            'latestSales'
         ));
     }
 }

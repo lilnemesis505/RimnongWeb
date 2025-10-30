@@ -17,6 +17,9 @@ class Receipt extends Model
         're_date',
         'price_total',
     ];
+    protected $casts = [
+        're_date' => 'datetime',
+    ];
 
     public function order()
     {

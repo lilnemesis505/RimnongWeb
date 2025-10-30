@@ -15,7 +15,6 @@
         .placeholder-text { color: #6c757d; font-style: italic; }
         .info-box-col { margin-bottom: 1rem; }
         
-        /* [เพิ่ม] CSS สำหรับแท็บและการปรับยอด */
         .alert-feed-box {
             max-height: 380px; /* ความสูงสำหรับ scroll */
             overflow-y: auto;
@@ -27,8 +26,9 @@
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
+    {{-- (Navbar และ Sidebar เหมือนเดิม) --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <ul class="navbar-nav">
+         <ul class="navbar-nav">
              <li class="nav-item">
                 <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
             </li>
@@ -95,6 +95,7 @@
             </nav>
         </div>
     </aside>
+
     <div class="content-wrapper p-3">
         <section class="content pt-3">
             <div class="container-fluid">
@@ -105,29 +106,43 @@
                     </a>
                 </div>
 
+                {{-- (Info Boxes... เหมือนเดิม) --}}
                 <div class="row">
                     <div class="col-lg col-md-4 col-sm-6 info-box-col"><div class="info-box shadow-sm"><span class="info-box-icon bg-info elevation-1"><i class="fas fa-users"></i></span><div class="info-box-content"><span class="info-box-text">ลูกค้าทั้งหมด</span><span class="info-box-number">{{ $customerCount }}</span></div></div></div>
                     <div class="col-lg col-md-4 col-sm-6 info-box-col"><div class="info-box shadow-sm"><span class="info-box-icon bg-success elevation-1"><i class="fas fa-user-tie"></i></span><div class="info-box-content"><span class="info-box-text">พนักงาน</span><span class="info-box-number">{{ $employeeCount }}</span></div></div></div>
                     <div class="col-lg col-md-4 col-sm-6 info-box-col"><div class="info-box shadow-sm"><span class="info-box-icon bg-secondary elevation-1"><i class="fas fa-box-open"></i></span><div class="info-box-content"><span class="info-box-text">สินค้าทั้งหมด</span><span class="info-box-number">{{ $productCount }}</span></div></div></div>
                     <div class="col-lg col-md-6 col-sm-6 info-box-col"><div class="info-box shadow-sm"><span class="info-box-icon bg-primary elevation-1"><i class="fas fa-cubes"></i></span><div class="info-box-content"><span class="info-box-text">ชนิดวัตถุดิบ</span><span class="info-box-number">{{ $stockItemCount ?? 'N/A' }}</span></div></div></div>
+                    
+                    <div class="col-lg col-md-6 col-sm-6 info-box-col">
+                        <div class="info-box shadow-sm">
+                            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-calendar-day"></i></span>
+                            <div class="info-box-content">
+                                <span class="info-box-text">ยอดขายวันนี้ ({{ $today->format('d/m/Y') }})</span>
+                                <span class="info-box-number">{{ number_format($todaySales, 2) }} <small>บาท</small></span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     <div class="col-lg col-md-6 col-sm-12 info-box-col"><div class="info-box shadow-sm"><span class="info-box-icon bg-warning elevation-1"><i class="fas fa-money-bill-wave"></i></span><div class="info-box-content"><span class="info-box-text">ยอดขายรวม</span><span class="info-box-number">{{ number_format($totalSales, 2) }} <small>บาท</small></span></div></div></div>
                 </div>
 
-                <div class="row mt-4 row-eq-height">
+                <div class="row mt-4">
                     <div class="col-lg-6 mb-4">
-                        <div class="card card-warning card-outline h-100">
+                        <div class="card card-warning card-outline ">
                             
                             <div class="card-header d-flex p-0">
-                                <h3 class="card-title p-3"><i class="fas fa-bell text-warning"></i> แจ้งเตือนสต็อก</h3>
+                                <h3 class="card-title p-3"><i class="fas fa-bell text-warning"></i> แจ้งเตือนและประวัติสต็อก</h3>
                                 <ul class="nav nav-pills ml-auto p-2 card-header-tabs">
                                     <li class="nav-item"><a class="nav-link active" href="#tab-expiring" data-toggle="tab">ใกล้หมดอายุ</a></li>
                                     <li class="nav-item"><a class="nav-link" href="#tab-adjustments" data-toggle="tab">การปรับยอด</a></li>
+                                    <li class="nav-item"><a class="nav-link" href="#tab-withdrawals" data-toggle="tab">การเบิกล่าสุด</a></li>
                                 </ul>
                             </div>
                             
                             <div class="card-body p-0">
                                 <div class="tab-content" id="alert-tabs-content">
                                     
+                                    {{-- แท็บ 1: ใกล้หมดอายุ (เหมือนเดิม) --}}
                                     <div class="tab-pane fade show active alert-feed-box" id="tab-expiring" role="tabpanel">
                                         <ul class="products-list product-list-in-card pl-2 pr-2">
                                             @forelse($expiringStock as $stock)
@@ -138,17 +153,16 @@
                                         </ul>
                                     </div>
                                     
-                                    <div class="tab-pane fade alert-feed-box" id="tab-adjustments" role="tabpanel">
+                                <div class="tab-pane fade alert-feed-box" id="tab-adjustments" role="tabpanel">
                                         <table class="table table-sm table-hover">
                                             <tbody>
                                                 @forelse($latestAdjustments as $adj)
-                                                    {{-- ตรวจสอบสีพื้นหลังด้วย 'amount' --}}
+                                                    {{-- (ดูจากรูป DB ที่ส่งมา คอลัมน์คือ stock_mat_id) --}}
                                                     <tr class="{{ $adj->amount > 0 ? 'adjustment-increase' : 'adjustment-decrease' }}">
                                                         <td style="width: 75%;">
                                                             <a href="{{ route('stock.edit', $adj->stock_mat_id) }}" class="font-weight-bold">{{ $adj->stockMat->mat_name ?? 'N/A' }}</a>
                                                             <small class="d-block text-muted">
                                                                 {{ $adj->admin->fullname ?? 'N/A' }}
-                                                                {{-- แสดงผล 'amount' --}}
                                                                 @if($adj->amount > 0)
                                                                     <span class="text-success">(เพิ่ม {{ abs($adj->amount) }})</span>
                                                                 @else
@@ -156,23 +170,52 @@
                                                                 @endif
                                                             </small>
                                                         </td>
-                                                        {{-- ใช้ 'adjust_date' --}}
                                                         <td class="text-right text-sm align-middle">{{ $adj->adjust_date->format('d/m H:i') }}</td>
                                                     </tr>
                                                 @empty
-                                                    <tr><td class="text-center p-3 text-muted"><i class="fas fa-info-circle"></i> ยังไม่มีประวัติการปรับยอด</td></tr>
+                                                    <tr><td colspan="2" class="text-center p-3 text-muted"><i class="fas fa-info-circle"></i> ยังไม่มีประวัติการปรับยอด</td></tr>
                                                 @endforelse
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    {{-- [แก้ไข] แท็บ 3: การเบิกล่าสุด (นี่คือโค้ดที่อยู่ผิดที่) --}}
+                                   <div class="tab-pane fade alert-feed-box" id="tab-withdrawals" role="tabpanel">
+                                        <table class="table table-sm table-hover">
+                                            <tbody>
+                                                @forelse($latestWithdrawals as $withdrawal)
+                                                    <tr>
+                                                        <td style="width: 75%;">
+                                                            @if($withdrawal->mat_id)
+                                                                <a href="{{ route('stock.edit', $withdrawal->mat_id) }}" class="font-weight-bold">
+                                                                    {{ $withdrawal->stockMaterial->mat_name ?? 'N/A' }}
+                                                                </a>
+                                                            @else
+                                                                <span class="font-weight-bold text-danger">(ข้อมูลวัตถุดิบไม่สมบูรณ์)</span>
+                                                            @endif
+                                                            
+                                                            <small class="d-block text-muted">
+                                                                {{ $withdrawal->admin->fullname ?? 'N/A' }}
+                                                                <span class="text-secondary">(เบิก {{ $withdrawal->withdraw_amount }})</span>
+                                                            </small>
+                                                        </td>
+                                                        <td class="text-right text-sm align-middle">{{ $withdrawal->withdraw_date->format('d/m H:i') }}</td>
+                                                    </tr>
+                                                @empty
+                                                    <tr><td colspan="2" class="text-center p-3 text-muted"><i class="fas fa-info-circle"></i> ยังไม่มีประวัติการเบิก</td></tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    
                                 </div>
                             </div>
 
                         </div>
                     </div>
-                    {{-- สินค้าโปรโมชั่นพิเศษ (เหมือนเดิมตามไฟล์ของคุณ) --}}
+                    {{-- สินค้าโปรโมชั่นพิเศษ (เหมือนเดิม) --}}
                     <div class="col-lg-6 mb-4">
-                        <div class="card card-danger card-outline h-100">
+                        <div class="card card-danger card-outline ">
                             <div class="card-header"><h3 class="card-title"><i class="fas fa-star text-danger"></i> สินค้าโปรโมชั่นพิเศษ <a href="{{ route('promotion.index') }}" class="text-sm">(จัดการโปรโมชั่น)</a></h3></div>
                             <div class="card-body p-0">
                                 <table class="table table-hover table-sm">
@@ -194,6 +237,7 @@
                                             @endif
                                         @empty
                                             <tr><td colspan="3" class="text-center p-4 text-muted"><i class="fas fa-info-circle"></i> ขณะนี้ไม่มีสินค้าโปรโมชั่น</td></tr>
+                                        {{-- [แก้ไข] 👈 พิมพ์ผิด @endfGists แก้เป็น @endforelse --}}
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -202,43 +246,47 @@
                     </div>
                 </div>
 
-                <div class="row mt-2">
-                    <div class="col-12">
-                        <div class="card card-info card-outline">
-                            <div class="card-header"><h3 class="card-title"><i class="fas fa-exchange-alt text-info"></i> ประวัติการเบิกวัตถุดิบ (5 รายการล่าสุด)</h3></div>
-                            <div class="card-body p-0">
-                                @if($latestWithdrawals->isEmpty())
-                                    <p class="placeholder-text text-center p-4">ยังไม่มีข้อมูลการเบิกวัตถุดิบ</p>
-                                @else
-                                    <table class="table table-striped table-sm">
-                                        <thead><tr><th style="width: 10%;">#</th><th>ชื่อวัตถุดิบ</th><th class="text-center">จำนวน</th><th class="text-right">ราคา</th><th class="text-center">เวลา</th><th>ผู้เบิก</th></tr></thead>
-                                        <tbody>
-                                            @foreach($latestWithdrawals as $withdrawal)
-                                                <tr>
-                                                    <td>#{{ $withdrawal->withdrawal_id }}</td>
-                                                    <td>{{ $withdrawal->stockMaterial->mat_name ?? 'N/A' }}</td>
-                                                    <td class="text-center">{{ $withdrawal->withdraw_amount }}</td>
-                                                    <td class="text-right text-muted">{{ number_format($withdrawal->calculated_cost, 2) }}</td>
-                                                    <td class="text-center text-sm">{{ $withdrawal->withdraw_date->format('d/m H:i') }}</td>
-                                                    <td class="text-sm">{{ $withdrawal->admin->fullname ?? 'N/A' }}</td>
-                                                </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                @endif
-                            </div>
-                             @if($latestWithdrawals->isNotEmpty())
-                             <div class="card-footer text-center">
-                                 <a href="#">ดูประวัติการเบิกทั้งหมด</a>
-                             </div>
-                             @endif
-                        </div>
-                    </div>
-                </div>
-
-            </div></section>
+                {{-- ประวัติการขาย (5 รายการล่าสุด) (เหมือนเดิม) --}}
+             <div class="row mt-2">
+    <div class="col-12">
+        <div class="card card-info card-outline">
+            <div class="card-header"><h3 class="card-title"><i class="fas fa-history text-info"></i> ประวัติการขาย (5 รายการล่าสุด)</h3></div>
+            <div class="card-body p-0">
+                @if($latestSales->isEmpty())
+                    <p class="placeholder-text text-center p-4">ยังไม่มีข้อมูลการขาย</p>
+                @else
+                    <table class="table table-striped table-sm">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%;">#บิล</th>
+                                <th>ผู้ทำรายการ</th>
+                                <th class="text-right">ยอดรวม</th>
+                                <th class="text-center">เวลา</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($latestSales as $sale)
+                                <tr>
+                                    <td>#{{ $sale->re_id }}</td>
+                                    <td>{{ $sale->order->employee->fullname ?? 'N/A' }}</td>
+                                    <td class="text-right text-success font-weight-bold">{{ number_format($sale->price_total, 2) }}</td>
+                                    <td class="text-center text-sm">{{ $sale->re_date->format('d/m H:i') }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
+            </div>
+             @if($latestSales->isNotEmpty())
+             <div class="card-footer text-center">
+                 <a href="{{ route('history.index') }}">ดูประวัติการขายทั้งหมด</a>
+             </div>
+             @endif
+        </div>
     </div>
+</div>
     
+    {{-- (Modal Logout - โค้ดที่คุณส่งมาถูกต้องครับ) --}}
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">
        <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
