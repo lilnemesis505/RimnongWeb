@@ -146,7 +146,7 @@
                             <label>รับเข้าสต็อกเพิ่ม (นำเข้า)</label>
                             <input type="number" name="add_stock" class="form-control" 
                                    value="{{ old('add_stock', 0) }}" min="0"> 
-                            <small class="form-text text-success">กรอกยอดที่สั่งซื้อมาใหม่ (บวกเข้าสต็อก)</small>
+                            <small class="form-text text-success">กรอกยอดที่สั่งซื้อมาใหม่ (ไม่บังคับกรอก)</small>
                         </div>
                     </div>
                     <div class="col-md-6">

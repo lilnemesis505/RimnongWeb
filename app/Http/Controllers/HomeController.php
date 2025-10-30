@@ -39,6 +39,8 @@ class HomeController extends Controller
         $productCount = Product::count();
         $totalSales = Receipt::sum('price_total');
         $stockItemCount = StockMat::count();
+        
+        // [แก้ไข] 👈 1. สร้างตัวแปร $today
         $today = Carbon::today();
 
         // (ใช้ re_date)
@@ -96,9 +98,9 @@ class HomeController extends Controller
             'stockItemCount',
             'latestWithdrawals',
             'latestAdjustments',
-            'today',
-            'todaySales',
-            'latestSales'
+            'today', // 👈 [แก้ไข] 4. ส่ง $today ไปที่ View
+            'todaySales', // 👈 [แก้ไข] 5. ส่ง $todaySales ไปที่ View
+            'latestSales' // 👈 [แก้ไข] 6. ส่ง $latestSales ไปที่ View
         ));
     }
 }

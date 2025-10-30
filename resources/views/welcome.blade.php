@@ -81,10 +81,11 @@
                             <p>รายงาน <i class="right fas fa-angle-left"></i></p>
                         </a>
                         <ul class="nav nav-treeview">
-                            <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link"><i class="far fa-circle nav-icon text-teal"></i> <p>รายงานการขายสินค้า</p></a></li>
-                            <li class="nav-item"><a href="{{ route('report.bills') }}" class="nav-link"><i class="far fa-circle nav-icon text-purple"></i> <p>รายงานยอดขาย</p></a></li>
-                            <li class="nav-item"><a href="#" class="nav-link"><i class="far fa-circle nav-icon text-orange"></i> <p>รายงานการเบิกวัตถุดิบ</p></a></li>
-                            <li class="nav-item"><a href="#" class="nav-link"><i class="far fa-circle nav-icon text-orange"></i> <p>รายงานกาปรับยอด</p></a></li>
+                            <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link"><i class="fas fa-chart-line nav-icon"></i><p>รายงานการขายสินค้า</p></a></li>
+                            <li class="nav-item"><a href="{{ route('report.bills') }}" class="nav-link"><i class="fas fa-chart-bar nav-icon"></i> <p>รายงานยอดขาย</p></a></li>
+                            <li class="nav-item"><a href="{{ route('report.withdrawals') }}" class="nav-link"><i class="fas fa-clipboard-list nav-icon"></i> <p>รายงานการเบิกวัตถุดิบ</p></a></li>
+                            {{-- [แก้ไข] 👈 บรรทัดนี้ --}}
+                            <li class="nav-item"><a href="{{ route('report.adjustments') }}" class="nav-link"><i class="fas fa-sliders-h nav-icon "></i> <p>รายงานกาปรับยอด</p></a></li>
                         </ul>
                     </li>
                     <li class="nav-header">อื่นๆ</li>
@@ -157,7 +158,7 @@
                                         <table class="table table-sm table-hover">
                                             <tbody>
                                                 @forelse($latestAdjustments as $adj)
-                                                    {{-- (ดูจากรูป DB ที่ส่งมา คอลัมน์คือ stock_mat_id) --}}
+                            
                                                     <tr class="{{ $adj->amount > 0 ? 'adjustment-increase' : 'adjustment-decrease' }}">
                                                         <td style="width: 75%;">
                                                             <a href="{{ route('stock.edit', $adj->stock_mat_id) }}" class="font-weight-bold">{{ $adj->stockMat->mat_name ?? 'N/A' }}</a>

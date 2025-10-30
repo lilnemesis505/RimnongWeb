@@ -29,9 +29,8 @@ public function store(Request $request)
     $rules = [
         'em_name'  => 'required|string|max:60',
         'username' => 'required|string|max:35|unique:employee,username',
-        // ✅ [FIX] เปลี่ยน min:6 เป็น min:8 และเพิ่ม 'confirmed'
         'password' => 'required|string|min:8|confirmed',
-        'em_tel'   => 'required|string|max:10',
+        'em_tel'   => 'required|string|digits:10',
         'em_email' => 'required|email|unique:employee,em_email',
     ];
 
@@ -44,7 +43,7 @@ public function store(Request $request)
         'password.min'      => 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร',
         'password.confirmed' => 'การยืนยันรหัสผ่านไม่ตรงกัน',
         'em_tel.required'   => 'กรุณากรอกเบอร์โทร',
-        'em_tel.digits:10'        => 'เบอร์โทรต้องมี 10 หลัก',
+        'em_tel.digits'  => 'เบอร์โทรต้องมี 10 หลัก',
         'em_email.required' => 'กรุณากรอกอีเมล',
         'em_email.email'    => 'รูปแบบอีเมลไม่ถูกต้อง',
         'em_email.unique'   => 'อีเมลนี้มีผู้ใช้งานแล้ว',
@@ -111,7 +110,7 @@ public function store(Request $request)
     $rules = [
         'em_name'  => 'required|string|max:60', // กฎ unique จะถูกเพิ่ม/ลบ แบบ dynamic
         'username' => 'required|string|max:35|unique:employee,username,' . $id . ',em_id',
-        'em_tel'   => 'required|string|max:10',
+        'em_tel'   => 'required|string|digits:10',
         'em_email' => 'required|email|unique:employee,em_email,' . $id . ',em_id',
     ];
 
@@ -122,6 +121,7 @@ public function store(Request $request)
         'username.required' => 'กรุณากรอก Username',
         'username.unique'   => 'Username นี้มีผู้ใช้งานแล้ว',
         'em_tel.required'   => 'กรุณากรอกเบอร์โทร',
+        'em_tel.digits'  => 'เบอร์โทรต้องมี 10 หลัก',
         'em_email.required' => 'กรุณากรอกอีเมล',
         'em_email.email'    => 'รูปแบบอีเมลไม่ถูกต้อง',
         'em_email.unique'   => 'อีเมลนี้มีผู้ใช้งานแล้ว',

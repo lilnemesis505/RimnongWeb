@@ -5,9 +5,23 @@
     <title>เพิ่มวัสดุคงคลัง</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+    
+    {{-- [เพิ่ม] 1. CSS สำหรับรูป Preview --}}
+    <style>
+        .image-preview {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-top: 15px;
+            display: none; /* 👈 ซ่อนไว้ก่อน */
+        }
+    </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
+    {{-- (Navbar และ Sidebar ... เหมือนเดิม) --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">เพิ่มข้อมูลนำเข้า</span>
     </nav>
@@ -40,6 +54,7 @@
             </nav>
         </div>
     </aside>
+
     <div class="content-wrapper p-3">
         <div class="card card-primary">
             <div class="card-header">
@@ -50,7 +65,7 @@
                 @csrf
                 <div class="card-body">
 
-                    {{-- (ส่วนแสดงผล Error เหมือนเดิม) --}}
+                    {{-- (ส่วนแสดงผล Error ... เหมือนเดิม) --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <h5 class="font-weight-bold">เกิดข้อผิดพลาด!</h5>
@@ -66,9 +81,8 @@
                             {{ session('error') }}
                         </div>
                     @endif
-                    {{-- จบส่วนแสดงผล Error --}}
 
-
+                    {{-- (Fields ... เหมือนเดิม) --}}
                     <div class="form-group">
                         <label>ชื่อวัสดุ</label>
                         <input type="text" name="mat_name" class="form-control" placeholder="กรอกชื่อวัสดุ" value="{{ old('mat_name') }}" required>
@@ -86,13 +100,6 @@
                         </select>
                     </div>
 
-                    {{--
-                    <div class="form-group">
-                        <label>วันที่นำเข้า</label>
-                        <input type="date" name="import_date" class="form-control" value="{{ old('import_date') }}" required>
-                    </div>
-                    --}}
-
                     <div class="form-group">
                         <label>จำนวนที่นำเข้า</label>
                         <input type="number" name="quantity" class="form-control" value="{{ old('quantity') }}" required>
@@ -103,32 +110,18 @@
                         <input type="date" name="exp_date" class="form-control" value="{{ old('exp_date') }}">
                     </div>
 
-                    {{--
-                    <div class="form-group">
-                        <label>จำนวนคงเหลือ</label>
-                        <input type="number" name="remain" class="form-control" value="{{ old('remain') }}" required>
-                    </div>
-                    --}}
-
                     <div class="form-group">
                         <label>ราคาต่อหน่วย</label>
                         <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ old('unitcost') }}" required>
                     </div>
 
-                    {{--
-                    <div class="form-group">
-                        <label>สถานะ</label>
-                        <select name="status" class="form-control" required>
-                            <option value="0" {{ old('status') == '0' ? 'selected' : '' }}>ปกติ</option>
-                            <option value="1" {{ old('status') == '1' ? 'selected' : '' }}>หมด และยังไม่ได้สั่ง</option>
-                            <option value="2" {{ old('status') == '2' ? 'selected' : '' }}>หมด และสั่งซื้อแต่ยังไม่ได้รับ</option>
-                        </select>
-                    </div>
-                    --}}
-
+                    {{-- [แก้ไข] 2. ส่วนของรูปภาพ --}}
                     <div class="form-group">
                         <label for="image_upload">รูปภาพวัสดุ (รองรับ .jpg, .png)</label>
                         <input type="file" name="image_upload" id="image_upload" class="form-control-file" accept=".jpg, .jpeg, .png">
+                        
+                        {{-- [เพิ่ม] 3. แท็กสำหรับแสดงรูป Preview --}}
+                        <img id="image_preview" src="#" alt="Image Preview" class="image-preview" />
                     </div>
                 </div>
 
@@ -143,5 +136,28 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
+{{-- [เพิ่ม] 4. JavaScript สำหรับ Preview รูป --}}
+<script>
+    document.getElementById('image_upload').addEventListener('change', function(event) {
+        var preview = document.getElementById('image_preview');
+        var file = event.target.files[0];
+        
+        if (file) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block'; // 👈 แสดงรูป
+            }
+            
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none'; // 👈 ซ่อนรูป
+        }
+    });
+</script>
+
 </body>
 </html>

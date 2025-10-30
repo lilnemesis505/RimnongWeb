@@ -19,6 +19,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\HomeController; 
 use App\Http\Controllers\Auth\AdminForgotPasswordController;
 use App\Http\Controllers\WithdrawalController;
+use App\Http\Controllers\WithdrawalReportController;
+use App\Http\Controllers\StockAdjustmentReportController;
 
 // login Admin
 Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('login');
@@ -111,6 +113,11 @@ Route::middleware('admin.auth')->group(function () {
     // reports
  Route::get('/salereport', [ReportController::class, 'saleReport'])->name('salereport.index');
  Route::get('/report/bills', [ReportController::class, 'billReport'])->name('report.bills');
+ Route::get('/reports/withdrawals', [WithdrawalReportController::class, 'index'])->name('report.withdrawals');
+ Route::get('/reports/withdrawals/print', [WithdrawalReportController::class, 'print'])->name('report.withdrawals.print');
+ // [เพิ่ม] 2 บรรทัดสำหรับรายงานการปรับยอด
+ Route::get('/reports/adjustments', [StockAdjustmentReportController::class, 'index'])->name('report.adjustments');
+ Route::get('/reports/adjustments/print', [StockAdjustmentReportController::class, 'print'])->name('report.adjustments.print');
 
     // dashboard
 
