@@ -81,7 +81,7 @@
                             <li class="nav-item active">
                                 <a href="{{ route('report.adjustments') }}" class="nav-link active">
                                     <i class="fas fa-sliders-h nav-icon "></i> 
-                                    <p>รายงานกาปรับยอด</p>
+                                    <p>รายงานกาปรับยอดล็อตสินค้า</p>
                                 </a>
                             </li>
                         </ul>

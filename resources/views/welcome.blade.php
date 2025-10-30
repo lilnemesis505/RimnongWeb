@@ -85,7 +85,7 @@
                             <li class="nav-item"><a href="{{ route('report.bills') }}" class="nav-link"><i class="fas fa-chart-bar nav-icon"></i> <p>รายงานยอดขาย</p></a></li>
                             <li class="nav-item"><a href="{{ route('report.withdrawals') }}" class="nav-link"><i class="fas fa-clipboard-list nav-icon"></i> <p>รายงานการเบิกวัตถุดิบ</p></a></li>
                             {{-- [แก้ไข] 👈 บรรทัดนี้ --}}
-                            <li class="nav-item"><a href="{{ route('report.adjustments') }}" class="nav-link"><i class="fas fa-sliders-h nav-icon "></i> <p>รายงานกาปรับยอด</p></a></li>
+                            <li class="nav-item"><a href="{{ route('report.adjustments') }}" class="nav-link"><i class="fas fa-sliders-h nav-icon "></i> <p>รายงานกาปรับยอดล็อตสินค้า</p></a></li>
                         </ul>
                     </li>
                     <li class="nav-header">อื่นๆ</li>

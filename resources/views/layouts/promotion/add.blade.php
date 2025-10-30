@@ -59,7 +59,7 @@
                     
                     {{-- === ส่วนที่เพิ่มเข้ามา === --}}
                     <div class="mb-3">
-                        <label for="pro_id" class="form-label">สินค้าที่ร่วมรายการ</label>
+                        <label for="pro_id" class="form-label">สินค้าที่ร่วมรายการ(สินค้าหนึ่งคัวต่อหนึงโปรโมชั่น)</label>
                         <select name="pro_id" class="form-control" required>
                             <option value="">-- กรุณาเลือกสินค้า --</option>
                             @foreach($products as $product)
