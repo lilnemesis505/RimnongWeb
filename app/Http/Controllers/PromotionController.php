@@ -25,8 +25,9 @@ class PromotionController extends Controller
         return view('layouts.promotion.add', compact('products'));
     }
 
-   public function store(Request $request)
+  public function store(Request $request)
 {
+    // (ฟังก์ชัน store ของคุณถูกต้องแล้ว มี Logic เช็ควันที่ทับซ้อนครบถ้วน)
     $productId = $request->input('pro_id');
     $productPrice = 0; 
     if ($productId) {
@@ -37,32 +38,25 @@ class PromotionController extends Controller
     $rules = [
         'promo_name'     => 'required|string|max:50',
         'promo_start'    => 'required|date',
-        // [แก้ไข] 1. (ข้อ 2) กฎนี้ถูกต้องแล้ว (สิ้นสุด ห้ามอยู่ก่อนเริ่ม)
         'promo_end'      => 'required|date|after_or_equal:promo_start', 
-        
         'pro_id' => [
             'required',
             'integer',
             'exists:product,pro_id',
-            // [แก้ไข] 2. (ข้อ 1) ลบ Rule::unique() ออก และใช้ Custom Rule นี้แทน
+            // (Logic เช็ควันที่ทับซ้อนใน store - ถูกต้องแล้ว)
             function ($attribute, $value, $fail) use ($request) {
                 $newStart = $request->input('promo_start');
                 $newEnd = $request->input('promo_end');
-
-                // ค้นหาโปรโมชั่น "ใดๆ" ของสินค้านี้ ที่มีวันที่ทับซ้อนกัน
                 $overlappingPromo = Promotion::where('pro_id', $value)
                     ->where(function ($query) use ($newStart, $newEnd) {
-                        // 1. วันที่เริ่ม/สิ้นสุดใหม่ "คร่อม" วันที่เดิม
                         $query->whereBetween('promo_start', [$newStart, $newEnd])
-                        // 2. วันที่เริ่ม/สิ้นสุดเดิม "คร่อม" วันที่ใหม่
                               ->orWhereBetween('promo_end', [$newStart, $newEnd])
-                        // 3. วันที่ใหม่ "อยู่ภายใน" วันที่เดิม
                               ->orWhere(function($q) use ($newStart, $newEnd) {
                                   $q->where('promo_start', '<=', $newStart)
                                     ->where('promo_end', '>=', $newEnd);
                               });
                     })
-                    ->first(); // 👈 ค้นหาแค่ 1 รายการก็พอ
+                    ->first(); 
 
                 if ($overlappingPromo) {
                     $fail("สินค้านี้มีโปรโมชั่นในช่วงวันที่ ({$overlappingPromo->promo_start} ถึง {$overlappingPromo->promo_end}) ทับซ้อนกันอยู่แล้ว");
@@ -77,7 +71,6 @@ class PromotionController extends Controller
     $messages = [
         'pro_id.required' => 'กรุณาเลือกสินค้าที่ร่วมรายการ',
         'pro_id.exists'   => 'สินค้าที่เลือกไม่มีอยู่ในระบบ',
-        // [แก้ไข] 3. ลบข้อความ .unique ออก
         'promo_discount.required' => 'กรุณากรอกราคาที่ลด',
         'promo_discount.min'      => 'ราคาที่ลดต้องไม่ต่ำกว่า 0 บาท',
         'promo_discount.max'      => "ราคาที่ลดต้องไม่เกินราคาสินค้า ({$productPrice} บาท)",
@@ -88,23 +81,33 @@ class PromotionController extends Controller
     return redirect()->route('promotion.index')->with('success', 'เพิ่มโปรโมชั่นเรียบร้อยแล้ว');
 }
   
+   /**
+    * [แก้ไข] 👈 ลบ Logic 'promotedProductIds' ที่ไม่จำเป็นออก
+    */
    public function edit($id)
     {
-        // (ฟังก์ชัน edit ... Giongเดิม)
+        // 1. ดึงโปรโมชั่นปัจจุบัน (พร้อมนับ Order)
         $promotion = Promotion::withCount('orders')->findOrFail($id);
-        $products = Product::all();
-        $promotedProductIds = Promotion::where('promo_id', '!=', $id)
-                                        ->pluck('pro_id');
         
+        // 2. ดึงสินค้าทั้งหมด
+        $products = Product::all();
+        
+        // 3. [ลบ] 👈 ลบการดึง $promotedProductIds ออก
+        
+        // 4. ส่งข้อมูล 2 อย่างไปที่ View
         return view('layouts.promotion.edit', compact(
             'promotion', 
-            'products', 
-            'promotedProductIds' 
+            'products' 
+            // 👈 'promotedProductIds' ถูกลบแล้ว
         ));
     }
     
+   /**
+    * อัปเดตข้อมูลโปรโมชั่น
+    */
    public function update(Request $request, $id)
     {
+        // (ฟังก์ชัน update ของคุณถูกต้องแล้ว มี Logic เช็ควันที่ทับซ้อนครบถ้วน)
         $promotion = Promotion::findOrFail($id);
 
         $productId = $request->input('pro_id');
@@ -117,19 +120,18 @@ class PromotionController extends Controller
         $rules = [
             'promo_name'     => 'required|string|max:50',
             'promo_start'    => 'required|date',
-            // [แก้ไข] 4. (ข้อ 2) กฎนี้ถูกต้อง
             'promo_end'      => 'required|date|after_or_equal:promo_start',
             'pro_id' => [
                 'required',
                 'integer',
                 'exists:product,pro_id',
-                // [แก้ไข] 5. (ข้อ 1) ใช้ Custom Rule เดียวกับ store แต่ "ยกเว้น" ID ตัวเอง
+                // (Logic เช็ควันที่ทับซ้อนใน update - ถูกต้องแล้ว)
                 function ($attribute, $value, $fail) use ($request, $id) {
                     $newStart = $request->input('promo_start');
                     $newEnd = $request->input('promo_end');
 
                     $overlappingPromo = Promotion::where('pro_id', $value)
-                        ->where('promo_id', '!=', $id) // 👈 (ยกเว้น ID ของโปรโมชั่นนี้)
+                        ->where('promo_id', '!=', $id) 
                         ->where(function ($query) use ($newStart, $newEnd) {
                             $query->whereBetween('promo_start', [$newStart, $newEnd])
                                   ->orWhereBetween('promo_end', [$newStart, $newEnd])
