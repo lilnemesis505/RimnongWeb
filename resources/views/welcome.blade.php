@@ -84,7 +84,6 @@
                             <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link"><i class="fas fa-chart-line nav-icon"></i><p>รายงานการขายสินค้า</p></a></li>
                             <li class="nav-item"><a href="{{ route('report.bills') }}" class="nav-link"><i class="fas fa-chart-bar nav-icon"></i> <p>รายงานยอดขาย</p></a></li>
                             <li class="nav-item"><a href="{{ route('report.withdrawals') }}" class="nav-link"><i class="fas fa-clipboard-list nav-icon"></i> <p>รายงานการเบิกวัตถุดิบ</p></a></li>
-                            {{-- [แก้ไข] 👈 บรรทัดนี้ --}}
                             <li class="nav-item"><a href="{{ route('report.adjustments') }}" class="nav-link"><i class="fas fa-sliders-h nav-icon "></i> <p>รายงานกาปรับยอดล็อตสินค้า</p></a></li>
                         </ul>
                     </li>
@@ -143,7 +142,6 @@
                             <div class="card-body p-0">
                                 <div class="tab-content" id="alert-tabs-content">
                                     
-                                    {{-- แท็บ 1: ใกล้หมดอายุ (เหมือนเดิม) --}}
                                     <div class="tab-pane fade show active alert-feed-box" id="tab-expiring" role="tabpanel">
                                         <ul class="products-list product-list-in-card pl-2 pr-2">
                                             @forelse($expiringStock as $stock)
@@ -180,7 +178,6 @@
                                         </table>
                                     </div>
 
-                                    {{-- [แก้ไข] แท็บ 3: การเบิกล่าสุด (นี่คือโค้ดที่อยู่ผิดที่) --}}
                                    <div class="tab-pane fade alert-feed-box" id="tab-withdrawals" role="tabpanel">
                                         <table class="table table-sm table-hover">
                                             <tbody>
@@ -238,7 +235,6 @@
                                             @endif
                                         @empty
                                             <tr><td colspan="3" class="text-center p-4 text-muted"><i class="fas fa-info-circle"></i> ขณะนี้ไม่มีสินค้าโปรโมชั่น</td></tr>
-                                        {{-- [แก้ไข] 👈 พิมพ์ผิด @endfGists แก้เป็น @endforelse --}}
                                         @endforelse
                                     </tbody>
                                 </table>
@@ -247,7 +243,7 @@
                     </div>
                 </div>
 
-                {{-- ประวัติการขาย (5 รายการล่าสุด) (เหมือนเดิม) --}}
+                {{-- ประวัติการขาย (5 รายการล่าสุด) --}}
              <div class="row mt-2">
     <div class="col-12">
         <div class="card card-info card-outline">
@@ -269,7 +265,10 @@
                             @foreach($latestSales as $sale)
                                 <tr>
                                     <td>#{{ $sale->re_id }}</td>
-                                    <td>{{ $sale->order->employee->fullname ?? 'N/A' }}</td>
+                                    
+                                    {{-- [แก้ไข] 👈 เปลี่ยน 'fullname' เป็น 'em_name' --}}
+                                    <td>{{ $sale->order->employee->em_name ?? 'N/A' }}</td>
+                                    
                                     <td class="text-right text-success font-weight-bold">{{ number_format($sale->price_total, 2) }}</td>
                                     <td class="text-center text-sm">{{ $sale->re_date->format('d/m H:i') }}</td>
                                 </tr>

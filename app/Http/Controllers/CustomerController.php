@@ -11,13 +11,11 @@ use App\Models\Order; //
 class CustomerController extends Controller
 {
     // สำหรับหน้าเว็บ: แสดงรายชื่อลูกค้า
-    public function index()
+   public function index()
     {
-        // [แก้ไข] ใช้ withSum เพื่อดึงยอดรวม 'price_total' จาก relationship 'orders'
-        // Laravel จะสร้าง attribute 'orders_sum_price_total' ให้โดยอัตโนมัติ
-        $customers = Customer::withSum('orders', 'price_total')->paginate(50); //
+        $customers = Customer::withSum('receipts', 'price_total')->paginate(50); 
 
-        return view('layouts.customer', compact('customers')); //
+        return view('layouts.customer', compact('customers')); 
     }
 
     // สำหรับ Flutter: สมัครสมาชิกผ่าน API

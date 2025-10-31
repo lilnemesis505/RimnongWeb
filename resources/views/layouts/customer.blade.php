@@ -49,7 +49,7 @@
         </div>
     </aside>
     
-    <div class="content-wrapper p-3" style="min-height: 100vh;">
+<div class="content-wrapper p-3" style="min-height: 100vh;">
         <div class="card">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-users mr-2"></i>ข้อมูลลูกค้า</h3>
@@ -76,7 +76,9 @@
                                 <td>{{ $customer->username }}</td>
                                 <td>{{ $customer->cus_tel }}</td>
                                 <td>{{ $customer->email }}</td>
-                                <td class="text-right">{{ number_format($customer->orders_sum_price_total ?? 0, 2) }}</td>
+                                
+                                {{-- [แก้ไข] 👈 เปลี่ยนจาก 'orders_sum_price_total' เป็น 'receipts_sum_price_total' --}}
+                                <td class="text-right">{{ number_format($customer->receipts_sum_price_total ?? 0, 2) }}</td>
                             </tr>
                             @endforeach
                         </tbody>

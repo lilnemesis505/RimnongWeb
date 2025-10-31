@@ -17,4 +17,15 @@ class Customer extends Model
 
         return $this->hasMany(Order::class, 'cus_id', 'cus_id');
     }
+    public function receipts()
+    {
+        return $this->hasManyThrough(
+            Receipt::class, // 👈 Model ปลายทาง (ที่เราต้องการ)
+            Order::class,   // 👈 Model ตรงกลาง (ที่เชื่อมอยู่)
+            'cus_id',     // Foreign key บนตาราง Order (ที่เชื่อมกับ Customer)
+            'order_id',   // Foreign key บนตาราง Receipt (ที่เชื่อมกับ Order)
+            'cus_id',     // Local key บนตาราง Customer (ตารางนี้)
+            'order_id'    // Local key บนตาราง Order (ตารางกลาง)
+        );
+    }
 }
