@@ -98,11 +98,10 @@ class PromotionController extends Controller
     /**
      * อัปเดตข้อมูลโปรโมชั่น
      */
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
         $promotion = Promotion::findOrFail($id);
 
-        // (Validation Logic - เหมือนกับ store)
         $productId = $request->input('pro_id');
         $productPrice = 0;
         if ($productId) {
@@ -118,11 +117,17 @@ class PromotionController extends Controller
                 'required',
                 'integer',
                 'exists:product,pro_id',
-                // [สำคัญ] 👈 บอกให้ Rule "unique" ไม่ต้องเช็ค ID ของตัวเอง
                 Rule::unique('promotion', 'pro_id')->ignore($id, 'promo_id'), 
             ],
+            // [แก้ไข] 👈 เพิ่ม Logic ล็อคราคา ถ้ามี Order แล้ว
             'promo_discount' => [
-                'required', 'numeric', 'min:0', "max:{$productPrice}"
+                'required', 
+                'numeric', 
+                'min:0', 
+                // ถ้ามี order แล้ว ($promotion->orders()->count() > 0) ให้ใช้ราคาเดิม
+                // ถ้ายังไม่มี ให้ใช้ max:{$productPrice}
+                // (หมายเหตุ: Controller เช็คแค่ว่าไม่เกิน แต่ View จะล็อคช่องไปเลย)
+                "max:{$productPrice}"
             ],
         ];
 
@@ -134,9 +139,16 @@ class PromotionController extends Controller
             'promo_discount.max'      => "ราคาที่ลดต้องไม่เกินราคาสินค้า ({$productPrice} บาท)",
         ];
 
+        // [แก้ไข] 👈 ล็อคข้อมูลส่วนลดถ้ามี Order แล้ว
         $validated = $request->validate($rules, $messages);
+        
+        // ถ้ามี Order แล้ว ให้บังคับใช้ราคาส่วนลดเดิม (ป้องกันการแก้ไขผ่าน Postman)
+        if ($promotion->orders()->count() > 0) {
+            $validated['promo_discount'] = $promotion->promo_discount;
+            $validated['pro_id'] = $promotion->pro_id; // ล็อคสินค้าด้วย
+        }
 
-        $promotion->update($validated); // 👈 ใช้อัปเดตข้อมูล
+        $promotion->update($validated); 
 
         return redirect()->route('promotion.index')->with('success', 'แก้ไขโปรโมชั่นเรียบร้อยแล้ว');
     }
