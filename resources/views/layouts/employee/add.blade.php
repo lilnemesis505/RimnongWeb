@@ -8,40 +8,9 @@
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <span class="navbar-brand">เพิ่มข้อมูลพนักงาน</span>
-    </nav>
+    @include('layouts.assets._navbar')
 
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        {{-- ... (Sidebar เหมือนเดิม) ... --}}
-        <a href="#" class="brand-link">
-            <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
-        </a>
-        <div class="sidebar">
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('welcome') }}" class="nav-link">
-                            <i class="nav-icon fas fa-home-alt"></i> <p>หน้าหลัก</p>
-                        </a>
-                    </li>
-                </ul>
-                <hr style="border-top: 1px solid #fff;">
-                  <ul class="nav nav-pills nav-sidebar flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('employee.index') }}" class="nav-link">
-                            <i class="nav-icon fas fa-user"></i> <p>ข้อมูลพนักงาน</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('employee.add') }}" class="nav-link active">
-                            <i class="nav-icon fas fa-plus"></i> <p>เพิ่มข้อมูลพนักงาน</p>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </aside>
+    @include('layouts.assets._sidebar')
 
     <div class="content-wrapper p-3">
         <div class="card card-primary">

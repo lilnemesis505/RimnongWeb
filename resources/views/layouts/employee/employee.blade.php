@@ -10,44 +10,9 @@
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
     <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <span class="navbar-brand">พนักงาน</span>
-    </nav>
+   @include('layouts.assets._navbar')
     <!-- Sidebar -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="#" class="brand-link">
-            <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
-        </a>
-        <div class="sidebar">
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <li class="nav-item">
-                        <a href="{{ route('welcome') }}" class="nav-link" style="background: none; color: #fff;">
-                            <i class="nav-icon fas fa-home-alt"></i> <p>หน้าหลัก</p>
-                        </a>
-                    </li>
-                </ul>
-                <hr style="border-top: 1px solid #fff;">
-                <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
-                    <li class="nav-item">
-                         <a href="{{ route('employee.index') }}" class="nav-link" style="background-color:#007bff; color: #fff;">
-                    <i class="nav-icon fas fa-user"></i> <p>ข้อมูลพนักงาน</p>
-                         </a>
-                     </li>
-                     <li class="nav-item">
-                        <a href="{{ route('employee.add') }}" class="nav-link" style="background: none; color: #fff;">
-                     <i class="nav-icon fas fa-plus"></i> <p>เพิ่มข้อมูลพนักงาน</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link" style="background: none; color: #fff;">
-                     <i class="nav-icon fas fa-gear"></i> <p>แก้ไขข้อมูลพนักงาน</p>
-                        </a>
-                     </li>
-                </ul>
-            </nav>
-        </div>
-    </aside>
+    @include('layouts.assets._sidebar')
     <!-- Content Wrapper -->
     <div class="content-wrapper p-3" style="min-height: 100vh;">
         <div class="card">

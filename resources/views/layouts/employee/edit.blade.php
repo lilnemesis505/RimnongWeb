@@ -29,11 +29,6 @@
                 <hr style="border-top: 1px solid #fff;">
                 <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
                     <li class="nav-item">
-                         <a href="{{ route('employee.index') }}" class="nav-link" style="background: none; color: #fff;">
-                    <i class="nav-icon fas fa-user"></i> <p>ข้อมูลพนักงาน</p>
-                         </a>
-                     </li>
-                    <li class="nav-item">
                         <a href="" class="nav-link" style="background-color:#007bff; color: #fff;">
                      <i class="nav-icon fas fa-gear"></i> <p>แก้ไขข้อมูลพนักงาน</p>
                         </a>

@@ -21,7 +21,7 @@
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
-
+@include('layouts.assets._navbar')
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -38,28 +38,10 @@
                 </ul>
                 <hr style="border-top: 1px solid #fff;">
                 <ul class="nav nav-pills nav-sidebar flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('product.index') }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-shopping-cart"></i>
-                            <p>ข้อมูลสินค้า</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('product.add') }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-plus"></i>
-                            <p>เพิ่มข้อมูลสินค้า</p>
-                        </a>
-                    </li>
                      <li class="nav-item">
                         <a href="#" class="nav-link active">
                         <i class="nav-icon fas fa-gear"></i>
                         <p>แก้ไขข้อมูลสินค้า</p>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('protype.add') }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-chart-bar"></i>
-                            <p>ประเภทสินค้า</p>
                         </a>
                     </li>
                 </ul>

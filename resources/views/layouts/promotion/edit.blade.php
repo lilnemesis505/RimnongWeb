@@ -9,9 +9,7 @@
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
     {{-- (Navbar และ Sidebar ... เหมือนเดิม) --}}
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <span class="navbar-brand">แก้ไขข้อมูลโปรโมชั่น</span>
-    </nav>
+   @include('layouts.assets._navbar')
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -25,15 +23,9 @@
                 </ul>
                 <hr class="bg-white">
                 <ul class="nav nav-pills nav-sidebar flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('promotion.index') }}" class="nav-link text-white"><i class="nav-icon fas fa-ticket"></i> <p>ข้อมูลโปรโมชั่น</p></a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="{{ route('promotion.add') }}" class="nav-link text-white"><i class="nav-icon fas fa-plus"></i> <p>เพิ่มโปรโมชั่น</p></a>
-                    </li>
                      <li class="nav-item">
                         <a href="" class="nav-link  active" style="background-color:#007bff; color: #fff;">
-                     <i class="nav-icon fas fa-gear"></i> <p>แก้ไขข้อมูลพนักงาน</p>
+                     <i class="nav-icon fas fa-gear"></i> <p>แก้ไขข้อมูลโปรโมชั่น</p>
                         </a>
                      </li>
                 </ul>
