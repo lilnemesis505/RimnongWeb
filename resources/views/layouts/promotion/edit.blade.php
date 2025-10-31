@@ -12,7 +12,7 @@
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">แก้ไขข้อมูลโปรโมชั่น</span>
     </nav>
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+ <aside class="main-sidebar sidebar-dark-primary elevation-4">
         {{-- (Sidebar ... เหมือนเดิม) --}}
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -66,17 +66,37 @@
                         <input type="text" name="promo_name" class="form-control" required value="{{ old('promo_name', $promotion->promo_name) }}">
                     </div>
                     
+                    {{-- [แก้ไข] 👈 เพิ่ม Logic ล็อคสินค้า และเช็คซ้ำ --}}
                     <div class="mb-3">
                         <label for="pro_id" class="form-label">สินค้าที่ร่วมรายการ</label>
-                        <select name="pro_id" id="product_select" class="form-control" required>
+                        <select name="pro_id" id="product_select" class="form-control" required 
+                                {{-- 1. ล็อค Dropdown ถ้ามี Order แล้ว --}}
+                                @if($promotion->orders_count > 0) readonly disabled @endif>
+                            
                             <option value="">-- กรุณาเลือกสินค้า --</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->pro_id }}" {{ old('pro_id', $promotion->pro_id) == $product->pro_id ? 'selected' : '' }}>
-                                    {{ $product->pro_name }}
+                                @php
+                                    // 2. เช็คว่าสินค้านี้มีโปรอื่นอยู่แล้วหรือไม่
+                                    $isPromoted = $promotedProductIds->contains($product->pro_id);
+                                @endphp
+                                
+                                <option value="{{ $product->pro_id }}" 
+                                    {{ old('pro_id', $promotion->pro_id) == $product->pro_id ? 'selected' : '' }}
+                                    {{-- 3. ปิดตัวเลือก (ถ้ามีโปรอื่นแล้ว) --}}
+                                    {{ $isPromoted ? 'disabled' : '' }}>
+                                    
+                                    {{ $product->pro_name }} {{ $isPromoted ? '(มีโปรโมชั่นแล้ว)' : '' }}
                                 </option>
                             @endforeach
                         </select>
                         <small id="product_price_display" class="form-text text-info" style="display: none;"></small>
+                        
+                        {{-- 4. แสดงคำเตือนถ้า Dropdown ถูกล็อค --}}
+                        @if($promotion->orders_count > 0)
+                            <small class="form-text text-danger">
+                                <i class="fas fa-lock"></i> ไม่สามารถเปลี่ยนสินค้าได้ เนื่องจากโปรโมชั่นนี้มีการซื้อขายแล้ว
+                            </small>
+                        @endif
                     </div>
 
                     {{-- Logic ล็อคช่องส่วนลด (ถูกต้อง) --}}
@@ -84,14 +104,12 @@
                         <label for="promo_discount" class="form-label">ราคาที่ลด (บาท)</label>
                         
                         @if($promotion->orders_count > 0)
-                            {{-- ถ้ามี Order แล้ว: ล็อคช่องนี้ --}}
                             <input type="number" step="0.01" name="promo_discount" id="promo_discount" class="form-control" 
                                    value="{{ $promotion->promo_discount }}" readonly>
                             <small class="form-text text-danger">
-                                <i class="fas fa-lock"></i> โปรโมชั่นนี้มีการซื้อขายแล้ว จึงไม่สามารถแก้ไขราคาส่วนลดได้ (เพื่อป้องกันผลกระทบกับยอดขายในระบบ)
+                                <i class="fas fa-lock"></i> โปรโมชั่นนี้มีการซื้อขายแล้ว จึงไม่สามารถแก้ไขราคาส่วนลดได้
                             </small>
                         @else
-                            {{-- ถ้ายังไม่มี Order: แก้ไขได้ปกติ --}}
                             <input type="number" step="0.01" name="promo_discount" id="promo_discount" class="form-control" 
                                    required value="{{ old('promo_discount', $promotion->promo_discount) }}" min="0">
                             <small id="discount-error" class="text-danger" style="display: none;"></small>
@@ -118,7 +136,7 @@
 
 <?php $productsForJs = $products->keyBy('pro_id'); ?>
 
-{{-- [แก้ไข] 👈 JavaScript ฉบับรวมที่ถูกต้อง --}}
+{{-- JavaScript ฉบับเต็ม (รวมข้อ 1, 2, 3) --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const form = document.getElementById('promotion-form');
@@ -132,10 +150,10 @@
         const startDateInput = document.getElementById('promo_start');
         const endDateInput = document.getElementById('promo_end');
 
-        // [ฟังก์ชัน 1: อัปเดตราคา (ที่ขาดไป)]
+        // [ฟังก์ชัน 1: อัปเดตราคา]
         function updateProductInfo() {
             const selectedId = productSelect.value;
-            if(discountError) { // เช็คว่ามีช่อง Error ไหม (เผื่อช่องมัน readonly)
+            if(discountError) { 
                 discountError.style.display = 'none'; 
             }
 
@@ -146,7 +164,7 @@
                 priceDisplay.textContent = 'ราคาสินค้า: ' + price.toFixed(2) + ' บาท';
                 priceDisplay.style.display = 'block';
                 
-                if (discountInput) { // เช็คว่ามีช่องส่วนลดไหม
+                if (discountInput) { 
                     discountInput.max = price; 
                     if (parseFloat(discountInput.value) > price) {
                         discountInput.value = price; 
@@ -163,7 +181,7 @@
         productSelect.addEventListener('change', updateProductInfo);
         updateProductInfo(); 
         
-        // [ฟังก์ชัน 2: คุมวันที่ (ที่คุณขอ)]
+        // [ฟังก์ชัน 2: คุมวันที่]
         function validateDates() {
             const startDate = startDateInput.value;
             const endDate = endDateInput.value;
@@ -179,22 +197,20 @@
         endDateInput.addEventListener('change', validateDates);
         validateDates(); 
         
-        // [ฟังก์ชัน 3: เช็ค Error ภาษาไทย (ที่ขาดไป)]
+        // [ฟังก์ชัน 3: เช็ค Error ภาษาไทย]
         form.addEventListener('submit', function(event) {
             
-            // 1. เช็คว่าเลือกสินค้าหรือยัง
             if (productSelect.value === "") {
                 event.preventDefault(); 
                 alert('กรุณาเลือกสินค้าที่ร่วมรายการก่อนครับ');
                 return;
             }
 
-            // 2. ถ้าช่องส่วนลดถูกล็อค (readonly) ไม่ต้องเช็ค
+            // ถ้าช่องส่วนลดถูกล็อค (readonly) ไม่ต้องเช็ค
             if (discountInput.readOnly) {
-                return; // 👈 ส่งฟอร์มได้เลย
+                return; 
             }
 
-            // 3. ถ้าช่องส่วนลดแก้ไขได้ ให้เช็คตามปกติ
             const discountValue = parseFloat(discountInput.value);
 
             if (discountInput.value === "") {
