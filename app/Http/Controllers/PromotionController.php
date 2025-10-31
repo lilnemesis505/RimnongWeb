@@ -12,40 +12,60 @@ class PromotionController extends Controller
 {
     public function index()
     {
-        // 2. ใช้ with('product') เพื่อดึงข้อมูลสินค้าที่ผูกกันมาด้วย (Eager Loading)
-        $promotions = Promotion::with('product')->paginate(10);
+        $promotions = Promotion::with('product')
+                                 ->withCount('orders') // 👈 [เพิ่ม] 1. สั่งให้นับ Order ล่วงหน้า
+                                 ->paginate(10);
+                                 
         return view('layouts.promotion.promotion', compact('promotions'));
     }
 
     public function create()
     {
-        // 3. ดึงข้อมูลสินค้าทั้งหมดเพื่อส่งไปให้ dropdown
         $products = Product::all();
         return view('layouts.promotion.add', compact('products'));
     }
 
    public function store(Request $request)
 {
+    // [แก้ไข] 1. ดึงราคาสินค้าออกมาก่อน
+    $productId = $request->input('pro_id');
+    $productPrice = 0; // ค่าเริ่มต้น
+
+    if ($productId) {
+        $product = Product::find($productId);
+        if ($product) {
+            $productPrice = $product->price; // 👈 ได้ราคาสินค้า
+        }
+    }
+
+    // [แก้ไข] 2. สร้างกฎ Validation
     $rules = [
-        'promo_name'     => 'required|string|max:50', // กฎของ promo_name กลับมาเป็นแบบพื้นฐาน
-        'promo_discount' => 'required|numeric',
+        'promo_name'     => 'required|string|max:50',
         'promo_start'    => 'required|date',
         'promo_end'      => 'required|date|after_or_equal:promo_start',
-
-        // ✅ 1. เปลี่ยนกฎของ pro_id ให้ตรวจสอบความซ้ำในตาราง promotion
         'pro_id' => [
             'required',
             'integer',
             'exists:product,pro_id',
-            Rule::unique('promotion', 'pro_id'), // ตรวจสอบว่า pro_id นี้ต้องไม่ซ้ำในตาราง promotion
+            Rule::unique('promotion', 'pro_id'), 
+        ],
+        // [แก้ไข] 3. เพิ่มกฎ min และ max (ตามราคาสินค้า)
+        'promo_discount' => [
+            'required',
+            'numeric',
+            'min:0',
+            "max:{$productPrice}" // 👈 กฎใหม่: ห้ามเกินราคาสินค้า
         ],
     ];
 
+    // [แก้ไข] 4. เพิ่มข้อความแจ้งเตือน
     $messages = [
         'pro_id.required' => 'กรุณาเลือกสินค้าที่ร่วมรายการ',
         'pro_id.exists'   => 'สินค้าที่เลือกไม่มีอยู่ในระบบ',
-        // ✅ 2. เพิ่มข้อความแจ้งเตือนสำหรับ pro_id ที่ซ้ำกัน
         'pro_id.unique'   => 'สินค้านี้มีโปรโมชั่นอื่นอยู่แล้ว ไม่สามารถเพิ่มซ้ำได้',
+        'promo_discount.required' => 'กรุณากรอกราคาที่ลด',
+        'promo_discount.min'      => 'ราคาที่ลดต้องไม่ต่ำกว่า 0 บาท',
+        'promo_discount.max'      => "ราคาที่ลดต้องไม่เกินราคาสินค้า ({$productPrice} บาท)", // 👈 ข้อความใหม่
     ];
 
     $request->validate($rules, $messages);
@@ -56,13 +76,60 @@ class PromotionController extends Controller
 }
   
 
-    public function destroy($id)
+   public function edit($id)
     {
-        Promotion::destroy($id);
-        return redirect()->back()->with('success', 'ลบโปรโมชั่นเรียบร้อยแล้ว');
+        // [แก้ไข] 👈 เพิ่ม withCount('orders')
+        $promotion = Promotion::withCount('orders')->findOrFail($id);
+        $products = Product::all();
+        
+        return view('layouts.promotion.edit', compact('promotion', 'products'));
+    }
+    /**
+     * อัปเดตข้อมูลโปรโมชั่น
+     */
+    public function update(Request $request, $id)
+    {
+        $promotion = Promotion::findOrFail($id);
+
+        // (Validation Logic - เหมือนกับ store)
+        $productId = $request->input('pro_id');
+        $productPrice = 0;
+        if ($productId) {
+            $product = Product::find($productId);
+            if ($product) $productPrice = $product->price;
+        }
+
+        $rules = [
+            'promo_name'     => 'required|string|max:50',
+            'promo_start'    => 'required|date',
+            'promo_end'      => 'required|date|after_or_equal:promo_start',
+            'pro_id' => [
+                'required',
+                'integer',
+                'exists:product,pro_id',
+                // [สำคัญ] 👈 บอกให้ Rule "unique" ไม่ต้องเช็ค ID ของตัวเอง
+                Rule::unique('promotion', 'pro_id')->ignore($id, 'promo_id'), 
+            ],
+            'promo_discount' => [
+                'required', 'numeric', 'min:0', "max:{$productPrice}"
+            ],
+        ];
+
+        $messages = [
+            'pro_id.required' => 'กรุณาเลือกสินค้าที่ร่วมรายการ',
+            'pro_id.unique'   => 'สินค้านี้มีโปรโมชั่นอื่นอยู่แล้ว ไม่สามารถเพิ่มซ้ำได้',
+            'promo_discount.required' => 'กรุณากรอกราคาที่ลด',
+            'promo_discount.min'      => 'ราคาที่ลดต้องไม่ต่ำกว่า 0 บาท',
+            'promo_discount.max'      => "ราคาที่ลดต้องไม่เกินราคาสินค้า ({$productPrice} บาท)",
+        ];
+
+        $validated = $request->validate($rules, $messages);
+
+        $promotion->update($validated); // 👈 ใช้อัปเดตข้อมูล
+
+        return redirect()->route('promotion.index')->with('success', 'แก้ไขโปรโมชั่นเรียบร้อยแล้ว');
     }
 
-    // ... (ฟังก์ชัน check ไม่มีการเปลี่ยนแปลง)
     public function check(Request $request)
     {
     }

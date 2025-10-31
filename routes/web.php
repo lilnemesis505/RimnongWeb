@@ -101,6 +101,8 @@ Route::middleware('admin.auth')->group(function () {
     Route::post('/promotions', [PromotionController::class, 'store'])->name('promotion.store');
     Route::get('/promotions/add', [PromotionController::class, 'create'])->name('promotion.add');
     Route::delete('/promotions/{id}', [PromotionController::class, 'destroy'])->name('promotion.delete');
+    Route::get('/promotions/{id}/edit', [PromotionController::class, 'edit'])->name('promotion.edit');
+    Route::put('/promotions/{id}', [PromotionController::class, 'update'])->name('promotion.update');
 
     // history
     Route::delete('/order/{id}', [OrderController::class, 'destroy'])->name('order.destroy');

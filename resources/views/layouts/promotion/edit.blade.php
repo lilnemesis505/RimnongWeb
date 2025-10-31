@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>เพิ่มโปรโมชั่น</title>
+    <title>แก้ไขโปรโมชั่น</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
 </head>
@@ -10,15 +10,16 @@
 <div class="wrapper">
     {{-- Navbar and Sidebar --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <span class="navbar-brand">เพิ่มข้อมูลโปรโมชั่น</span>
+        <span class="navbar-brand">แก้ไขข้อมูลโปรโมชั่น</span>
     </nav>
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
+        {{-- (Sidebar ... เหมือนเดิม) --}}
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
         </a>
         <div class="sidebar">
             <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column">
+                 <ul class="nav nav-pills nav-sidebar flex-column">
                     <li class="nav-item">
                         <a href="{{ route('welcome') }}" class="nav-link text-white"><i class="nav-icon fas fa-home-alt"></i> <p>หน้าหลัก</p></a>
                     </li>
@@ -29,7 +30,7 @@
                         <a href="{{ route('promotion.index') }}" class="nav-link text-white"><i class="nav-icon fas fa-ticket"></i> <p>ข้อมูลโปรโมชั่น</p></a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('promotion.add') }}" class="nav-link active"><i class="nav-icon fas fa-plus"></i> <p>เพิ่มโปรโมชั่น</p></a>
+                        <a href="{{ route('promotion.add') }}" class="nav-link text-white"><i class="nav-icon fas fa-plus"></i> <p>เพิ่มโปรโมชั่น</p></a>
                     </li>
                 </ul>
             </nav>
@@ -48,22 +49,24 @@
             </div>
         @endif
         <div class="card mb-4">
-            <div class="card-header">เพิ่มโปรโมชั่นใหม่</div>
+            <div class="card-header">แก้ไขโปรโมชั่น</div>
             <div class="card-body">
-                {{-- [แก้ไข] 1. เพิ่ม id="promotion-form" และ novalidate --}}
-                <form action="{{ route('promotion.store') }}" method="POST" id="promotion-form" novalidate>
+                
+                <form action="{{ route('promotion.update', $promotion->promo_id) }}" method="POST" id="promotion-form" novalidate>
                     @csrf
+                    @method('PUT') 
+                    
                     <div class="mb-3">
                         <label for="promo_name" class="form-label">ชื่อโปรโมชั่น</label>
-                        <input type="text" name="promo_name" class="form-control" required value="{{ old('promo_name') }}">
+                        <input type="text" name="promo_name" class="form-control" required value="{{ old('promo_name', $promotion->promo_name) }}">
                     </div>
                     
                     <div class="mb-3">
-                        <label for="pro_id" class="form-label">สินค้าที่ร่วมรายการ (สินค้าหนึ่งตัวต่อหนึ่งโปรโมชั่น)</label>
+                        <label for="pro_id" class="form-label">สินค้าที่ร่วมรายการ</label>
                         <select name="pro_id" id="product_select" class="form-control" required>
                             <option value="">-- กรุณาเลือกสินค้า --</option>
                             @foreach($products as $product)
-                                <option value="{{ $product->pro_id }}" {{ old('pro_id') == $product->pro_id ? 'selected' : '' }}>
+                                <option value="{{ $product->pro_id }}" {{ old('pro_id', $promotion->pro_id) == $product->pro_id ? 'selected' : '' }}>
                                     {{ $product->pro_name }}
                                 </option>
                             @endforeach
@@ -71,23 +74,36 @@
                         <small id="product_price_display" class="form-text text-info" style="display: none;"></small>
                     </div>
 
+                    {{-- Logic ล็อคช่องส่วนลด (ถูกต้อง) --}}
                     <div class="mb-3">
                         <label for="promo_discount" class="form-label">ราคาที่ลด (บาท)</label>
-                        <input type="number" step="0.01" name="promo_discount" id="promo_discount" class="form-control" required value="{{ old('promo_discount', 0) }}" min="0">
                         
-                        {{-- [เพิ่ม] 2. ช่องสำหรับแสดง Error ภาษาไทย --}}
-                        <small id="discount-error" class="text-danger" style="display: none;"></small>
+                        @if($promotion->orders_count > 0)
+                            {{-- ถ้ามี Order แล้ว: ล็อคช่องนี้ --}}
+                            <input type="number" step="0.01" name="promo_discount" id="promo_discount" class="form-control" 
+                                   value="{{ $promotion->promo_discount }}" readonly>
+                            <small class="form-text text-danger">
+                                <i class="fas fa-lock"></i> โปรโมชั่นนี้มีการซื้อขายแล้ว จึงไม่สามารถแก้ไขราคาส่วนลดได้ (เพื่อป้องกันผลกระทบกับยอดขายในระบบ)
+                            </small>
+                        @else
+                            {{-- ถ้ายังไม่มี Order: แก้ไขได้ปกติ --}}
+                            <input type="number" step="0.01" name="promo_discount" id="promo_discount" class="form-control" 
+                                   required value="{{ old('promo_discount', $promotion->promo_discount) }}" min="0">
+                            <small id="discount-error" class="text-danger" style="display: none;"></small>
+                        @endif
                     </div>
                     
                     <div class="mb-3">
                         <label for="promo_start" class="form-label">วันที่เริ่ม</label>
-                        <input type="date" name="promo_start" class="form-control" required value="{{ old('promo_start') }}">
+                        <input type="date" name="promo_start" id="promo_start" class="form-control" required value="{{ old('promo_start', $promotion->promo_start) }}">
                     </div>
                     <div class="mb-3">
                         <label for="promo_end" class="form-label">วันที่สิ้นสุด</label>
-                        <input type="date" name="promo_end" class="form-control" required value="{{ old('promo_end') }}">
+                        <input type="date" name="promo_end" id="promo_end" class="form-control" required value="{{ old('promo_end', $promotion->promo_end) }}">
                     </div>
-                    <button type="submit" class="btn btn-primary">เพิ่มโปรโมชั่น</button>
+                    
+                    <button type="submit" class="btn btn-warning">บันทึกการแก้ไข</button>
+                    <a href="{{ route('promotion.index') }}" class="btn btn-secondary">ยกเลิก</a>
                 </form>
             </div>
         </div>
@@ -95,92 +111,105 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 
-{{-- [แก้ไข] 3. แก้ไข JavaScript ทั้งหมด --}}
-<?php
-    // (เตรียมข้อมูลให้ JS ใช้ง่าย ป้องกัน Error ใน VSCode)
-    $productsForJs = $products->keyBy('pro_id');
-?>
+<?php $productsForJs = $products->keyBy('pro_id'); ?>
+
+{{-- [แก้ไข] 👈 JavaScript ฉบับรวมที่ถูกต้อง --}}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // ดึง Element ที่เราต้องใช้
         const form = document.getElementById('promotion-form');
         const productSelect = document.getElementById('product_select');
         const discountInput = document.getElementById('promo_discount');
         const priceDisplay = document.getElementById('product_price_display');
-        const discountError = document.getElementById('discount-error'); // 👈 ช่อง Error ใหม่
-        
+        const discountError = document.getElementById('discount-error');
         const productsData = @json($productsForJs);
-        let currentMaxPrice = 0; // 👈 สร้างตัวแปรเก็บราคาสูงสุด
+        let currentMaxPrice = 0; 
+        
+        const startDateInput = document.getElementById('promo_start');
+        const endDateInput = document.getElementById('promo_end');
 
-        // 2. ฟังก์ชันอัปเดตราคา
+        // [ฟังก์ชัน 1: อัปเดตราคา (ที่ขาดไป)]
         function updateProductInfo() {
             const selectedId = productSelect.value;
-            discountError.style.display = 'none'; // 👈 ซ่อน Error เมื่อเปลี่ยนของ
+            if(discountError) { // เช็คว่ามีช่อง Error ไหม (เผื่อช่องมัน readonly)
+                discountError.style.display = 'none'; 
+            }
 
             if (selectedId && productsData[selectedId]) {
                 const product = productsData[selectedId];
                 const price = parseFloat(product.price);
-
-                currentMaxPrice = price; // 👈 อัปเดตเพดานราคา
-                
+                currentMaxPrice = price; 
                 priceDisplay.textContent = 'ราคาสินค้า: ' + price.toFixed(2) + ' บาท';
                 priceDisplay.style.display = 'block';
-
-                // (เรายังตั้ง max ไว้ เพื่อประโยชน์ของคนใช้มือถือ)
-                discountInput.max = price; 
                 
-                if (parseFloat(discountInput.value) > price) {
-                    discountInput.value = price; 
+                if (discountInput) { // เช็คว่ามีช่องส่วนลดไหม
+                    discountInput.max = price; 
+                    if (parseFloat(discountInput.value) > price) {
+                        discountInput.value = price; 
+                    }
                 }
-
             } else {
                 priceDisplay.style.display = 'none';
-                discountInput.max = null;
+                if (discountInput) {
+                    discountInput.max = null;
+                }
                 currentMaxPrice = 0;
             }
         }
-
-        // 3. สั่งให้ฟังก์ชันทำงานเมื่อมีการ 'change' (เลือกสินค้า)
         productSelect.addEventListener('change', updateProductInfo);
-        updateProductInfo(); // 👈 สั่งทำงาน 1 ครั้งตอนโหลดหน้า
+        updateProductInfo(); 
+        
+        // [ฟังก์ชัน 2: คุมวันที่ (ที่คุณขอ)]
+        function validateDates() {
+            const startDate = startDateInput.value;
+            const endDate = endDateInput.value;
 
-        // 4. [เพิ่ม] ฟังก์ชันตรวจสอบตอนกด Submit
+            if (startDate) {
+                endDateInput.min = startDate; 
+            }
+            if (endDate) {
+                startDateInput.max = endDate; 
+            }
+        }
+        startDateInput.addEventListener('change', validateDates);
+        endDateInput.addEventListener('change', validateDates);
+        validateDates(); 
+        
+        // [ฟังก์ชัน 3: เช็ค Error ภาษาไทย (ที่ขาดไป)]
         form.addEventListener('submit', function(event) {
-            const discountValue = parseFloat(discountInput.value);
-
-            // ตรวจสอบว่าเลือกสินค้าหรือยัง (จำเป็นเพราะเราใช้ novalidate)
+            
+            // 1. เช็คว่าเลือกสินค้าหรือยัง
             if (productSelect.value === "") {
-                event.preventDefault(); // 👈 หยุด!
-                // (คุณสามารถเพิ่ม Error message ตรงนี้ได้ถ้าต้องการ)
+                event.preventDefault(); 
                 alert('กรุณาเลือกสินค้าที่ร่วมรายการก่อนครับ');
                 return;
             }
 
-            // ตรวจสอบว่ากรอกส่วนลดหรือยัง
+            // 2. ถ้าช่องส่วนลดถูกล็อค (readonly) ไม่ต้องเช็ค
+            if (discountInput.readOnly) {
+                return; // 👈 ส่งฟอร์มได้เลย
+            }
+
+            // 3. ถ้าช่องส่วนลดแก้ไขได้ ให้เช็คตามปกติ
+            const discountValue = parseFloat(discountInput.value);
+
             if (discountInput.value === "") {
-                 event.preventDefault(); // 👈 หยุด!
+                 event.preventDefault(); 
                  discountError.textContent = 'กรุณากรอกส่วนลด';
                  discountError.style.display = 'block';
                  return;
             }
 
-            // ตรวจสอบว่าส่วนลดเกินราคาสินค้าหรือไม่
             if (currentMaxPrice > 0 && discountValue > currentMaxPrice) {
-                event.preventDefault(); // 👈 หยุด!
-                
-                // 👈 แสดง Error ภาษาไทย
+                event.preventDefault(); 
                 discountError.textContent = 'ส่วนลดต้องไม่เกินราคาสินค้า (' + currentMaxPrice.toFixed(2) + ' บาท)';
                 discountError.style.display = 'block';
             
             } else if (discountValue < 0) {
-                event.preventDefault(); // 👈 หยุด!
-                
-                // 👈 แสดง Error ภาษาไทย
+                event.preventDefault(); 
                 discountError.textContent = 'ส่วนลดต้องไม่ต่ำกว่า 0 บาท';
                 discountError.style.display = 'block';
             
             } else {
-                // ถ้าทุกอย่างผ่าน
                 discountError.style.display = 'none';
             }
         });
