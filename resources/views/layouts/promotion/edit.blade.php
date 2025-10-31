@@ -32,6 +32,11 @@
                     <li class="nav-item">
                         <a href="{{ route('promotion.add') }}" class="nav-link text-white"><i class="nav-icon fas fa-plus"></i> <p>เพิ่มโปรโมชั่น</p></a>
                     </li>
+                     <li class="nav-item">
+                        <a href="" class="nav-link  active" style="background-color:#007bff; color: #fff;">
+                     <i class="nav-icon fas fa-gear"></i> <p>แก้ไขข้อมูลพนักงาน</p>
+                        </a>
+                     </li>
                 </ul>
             </nav>
         </div>

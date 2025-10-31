@@ -76,13 +76,24 @@ class PromotionController extends Controller
 }
   
 
-   public function edit($id)
+ public function edit($id)
     {
-        // [แก้ไข] 👈 เพิ่ม withCount('orders')
+        // 1. ดึงโปรโมชั่นปัจจุบัน (พร้อมนับ Order)
         $promotion = Promotion::withCount('orders')->findOrFail($id);
+        
+        // 2. ดึงสินค้าทั้งหมด
         $products = Product::all();
         
-        return view('layouts.promotion.edit', compact('promotion', 'products'));
+        // 3. [เพิ่ม] ดึง ID สินค้าทั้งหมดที่มีโปรโมชั่นอยู่แล้ว (ยกเว้นตัวมันเอง)
+        $promotedProductIds = Promotion::where('promo_id', '!=', $id)
+                                        ->pluck('pro_id');
+        
+        // 4. ส่งข้อมูลทั้งหมดไปที่ View
+        return view('layouts.promotion.edit', compact(
+            'promotion', 
+            'products', 
+            'promotedProductIds' // 👈 ส่งตัวแปรใหม่ไปด้วย
+        ));
     }
     /**
      * อัปเดตข้อมูลโปรโมชั่น
