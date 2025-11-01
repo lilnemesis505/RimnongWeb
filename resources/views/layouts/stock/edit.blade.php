@@ -23,7 +23,7 @@
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
 
-    {{-- (ส่วน Navbar และ Sidebar เหมือนเดิม) --}}
+    {{-- (Navbar และ Sidebar ... เหมือนเดิม) --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">ข้อมูลปรับปรุงล็อตสินค้า</span>
     </nav>
@@ -68,13 +68,13 @@
             <h3 class="card-title"><i class="fas fa-edit"></i> แก้ไขข้อมูลล็อตวัตถุดิบ</h3>
         </div>
 
-        <form action="{{ route('stock.update', $mat->mat_id) }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('stock.update', $mat->mat_id) }}" method="POST" enctype="multipart/form-data" id="stock-edit-form">
             @csrf
             @method('PUT')
 
             <div class="card-body">
                 
-                {{-- (ส่วน Error เหมือนเดิม) --}}
+                {{-- (ส่วน Error ... เหมือนเดิม) --}}
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul>
@@ -90,7 +90,7 @@
                     </div>
                 @endif
                 
-                {{-- (ส่วนข้อมูลหลักและรูปภาพ เหมือนเดิม) --}}
+                {{-- (ข้อมูลหลัก ... เหมือนเดิม) --}}
                 <div class="form-group">
                     <label>ชื่อวัสดุ</label>
                     <input type="text" name="mat_name" class="form-control" value="{{ old('mat_name', $mat->mat_name) }}" required>
@@ -119,33 +119,32 @@
                     @endif
                 </div>
                 <div class="form-group">
-                    <label for="image_upload">เปลี่ยนรูปภาพ (รองรับ .jpg, .png)</label>
+                    {{-- [แก้ไข] 2. เพิ่มข้อความ (ไม่เกิน 3MB) --}}
+                    <label for="image_upload">เปลี่ยนรูปภาพ (รองรับ .jpg, .png, ไม่เกิน 3MB)</label>
                     <input type="file" name="image_upload" id="image_upload" class="form-control-file" accept=".jpg, .jpeg, .png">
-                    <small class="form-text text-muted">หากไม่ต้องการเปลี่ยนรูปภาพ ให้เว้นว่างไว้</small>
                 </div>
                 <hr>
                 
                 <h4><i class="fas fa-boxes"></i> จัดการสต็อก</h4>
                 
-                {{-- แถวที่ 1: แสดงยอดคงคลัง --}}
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>จำนวนคงเหลือ (ปัจจุบัน)</label>
                             <input type="number" class="form-control readonly-field" 
-                                   value="{{ $mat->remain }}" readonly>
+                                   value="{{ $mat->remain }}" readonly id="current_remain">
                             <small class="form-text text-muted">ยอดในระบบ (อัตโนมัติ)</small>
                         </div>
                     </div>
                 </div>
 
-                {{-- แถวที่ 2: กรอกข้อมูลการเปลี่ยนแปลง --}}
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <label>รับเข้าสต็อกเพิ่ม (นำเข้า)</label>
+                            {{-- [แก้ไข] 1. เพิ่ม max="999999" --}}
                             <input type="number" name="add_stock" class="form-control" 
-                                   value="{{ old('add_stock', 0) }}" min="0"> 
+                                   value="{{ old('add_stock', 0) }}" min="0" max="999999"> 
                             <small class="form-text text-success">กรอกยอดที่สั่งซื้อมาใหม่ (ไม่บังคับกรอก)</small>
                         </div>
                     </div>
@@ -154,15 +153,17 @@
                             <label>ปรับยอด (แก้ไข)</label>
                             <div class="input-group">
                                 <div class="input-group-prepend">
-                                    <select name="adjustment_type" class="form-control" style="border-radius: 0.25rem 0 0 0.25rem;">
+                                    <select name="adjustment_type" id="adjustment_type" class="form-control" style="border-radius: 0.25rem 0 0 0.25rem;">
                                         <option value="add" {{ old('adjustment_type') == 'add' ? 'selected' : '' }}>ปรับขึ้น (+)</option>
                                         <option value="subtract" {{ old('adjustment_type') == 'subtract' ? 'selected' : '' }}>ปรับลด (-)</option>
                                     </select>
                                 </div>
-                                <input type="number" name="adjustment_amount" class="form-control" 
+                                <input type="number" name="adjustment_amount" id="adjustment_amount" class="form-control" 
                                        value="{{ old('adjustment_amount', 0) }}" min="0" required>
                             </div>
                             <small class="form-text text-info">ปรับยอดที่นับได้ถ้าไม่ตรงกับหน้าร้าน</small>
+                            {{-- (ช่องแจ้งเตือน JavaScript) --}}
+                            <small id="adjustment-error" class="text-danger" style="display: none;"></small>
                         </div>
                     </div>
                 </div>
@@ -174,7 +175,7 @@
                     <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ old('unitcost', $mat->unitcost) }}" required>
                 </div>
 
-                {{-- (ส่วน Status เหมือนเดิม) --}}
+                {{-- (ส่วน Status ... เหมือนเดิม) --}}
                 <div class="form-group">
                     <label>สถานะปัจจุบัน</label><br>
                     @if($mat->status == 2)
@@ -218,7 +219,7 @@
                 </div>
         </form> {{-- (ปิดฟอร์มหลัก) --}}
         
-        {{-- (ฟอร์มลบ เหมือนเดิม) --}}
+        {{-- (ฟอร์มลบ ... เหมือนเดิม) --}}
         <form action="{{ route('stock.destroy', $mat->mat_id) }}" method="POST"
               onsubmit="return confirm('คุณแน่ใจว่าต้องการลบข้อมูลนี้หรือไม่?')">
             @csrf
@@ -232,6 +233,49 @@
     </div> {{-- ปิด card --}}
 </div> {{-- ปิด content-wrapper --}}
 </div> {{-- ปิด wrapper --}}
+
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
+{{-- [เพิ่ม] 3. JavaScript สำหรับเช็ครูปภาพ และเช็คสต็อกติดลบ --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // --- 1. ตรวจสอบขนาดไฟล์รูปภาพ ---
+        document.getElementById('image_upload').addEventListener('change', function(event) {
+            var file = event.target.files[0];
+            var maxSize = 3 * 1024 * 1024; // 3MB (คิดเป็น bytes)
+
+            if (file && file.size > maxSize) {
+                alert('ขนาดรูปภาพต้องไม่เกิน 3MB ครับ');
+                event.target.value = ''; // 👈 ล้างไฟล์ที่เลือก
+            }
+        });
+
+        // --- 2. ตรวจสอบสต็อกติดลบ (ฝั่ง Client) ---
+        var form = document.getElementById('stock-edit-form');
+        var adjustmentType = document.getElementById('adjustment_type');
+        var adjustmentAmount = document.getElementById('adjustment_amount');
+        var adjustmentError = document.getElementById('adjustment-error');
+        // 👈 ดึงยอดคงเหลือปัจจุบันจากช่อง readonly
+        var currentRemain = parseInt(document.getElementById('current_remain').value); 
+
+        form.addEventListener('submit', function(event) {
+            var amountToAdjust = parseInt(adjustmentAmount.value);
+            
+            // ตรวจสอบเฉพาะเมื่อเลือก "ปรับลด"
+            if (adjustmentType.value === 'subtract') {
+                if (amountToAdjust > currentRemain) {
+                    event.preventDefault(); // 👈 หยุดการส่งฟอร์ม
+                    adjustmentError.textContent = 'ไม่สามารถปรับลดได้ ยอดคงเหลือปัจจุบันคือ ' + currentRemain;
+                    adjustmentError.style.display = 'block';
+                } else {
+                    adjustmentError.style.display = 'none';
+                }
+            } else {
+                adjustmentError.style.display = 'none';
+            }
+        });
+    });
+</script>
 </body>
 </html>

@@ -6,7 +6,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
     
-    {{-- [เพิ่ม] 1. CSS สำหรับรูป Preview --}}
     <style>
         .image-preview {
             width: 200px;
@@ -15,7 +14,7 @@
             border-radius: 5px;
             border: 1px solid #ddd;
             margin-top: 15px;
-            display: none; /* 👈 ซ่อนไว้ก่อน */
+            display: none; 
         }
     </style>
 </head>
@@ -82,7 +81,6 @@
                         </div>
                     @endif
 
-                    {{-- (Fields ... เหมือนเดิม) --}}
                     <div class="form-group">
                         <label>ชื่อวัสดุ</label>
                         <input type="text" name="mat_name" class="form-control" placeholder="กรอกชื่อวัสดุ" value="{{ old('mat_name') }}" required>
@@ -102,7 +100,8 @@
 
                     <div class="form-group">
                         <label>จำนวนที่นำเข้า</label>
-                        <input type="number" name="quantity" class="form-control" value="{{ old('quantity') }}" required>
+                        {{-- [แก้ไข] 1. ลบ required, เพิ่ม max, min และค่าเริ่มต้น 0 --}}
+                        <input type="number" name="quantity" class="form-control" value="{{ old('quantity', 0) }}" min="0" max="999999">
                     </div>
 
                     <div class="form-group">
@@ -115,12 +114,9 @@
                         <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ old('unitcost') }}" required>
                     </div>
 
-                    {{-- [แก้ไข] 2. ส่วนของรูปภาพ --}}
                     <div class="form-group">
-                        <label for="image_upload">รูปภาพวัสดุ (รองรับ .jpg, .png)</label>
+                        <label for="image_upload">รูปภาพวัสดุ (รองรับ .jpg, .png, ไม่เกิน 3MB)</label>
                         <input type="file" name="image_upload" id="image_upload" class="form-control-file" accept=".jpg, .jpeg, .png">
-                        
-                        {{-- [เพิ่ม] 3. แท็กสำหรับแสดงรูป Preview --}}
                         <img id="image_preview" src="#" alt="Image Preview" class="image-preview" />
                     </div>
                 </div>
@@ -137,24 +133,36 @@
 
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 
-{{-- [เพิ่ม] 4. JavaScript สำหรับ Preview รูป --}}
+{{-- [แก้ไข] 2. JavaScript สำหรับ Preview รูป (เพิ่มเช็คขนาดไฟล์) --}}
 <script>
     document.getElementById('image_upload').addEventListener('change', function(event) {
         var preview = document.getElementById('image_preview');
         var file = event.target.files[0];
-        
+        var maxSize = 3 * 1024 * 1024; // 3MB (คิดเป็น bytes)
+
         if (file) {
+            // 1. ตรวจสอบขนาดไฟล์
+            if (file.size > maxSize) {
+                // ถ้าไฟล์ใหญ่เกินไป:
+                alert('ขนาดรูปภาพต้องไม่เกิน 3MB ครับ');
+                event.target.value = ''; // 👈 ล้างไฟล์ที่เลือก
+                preview.src = '#';
+                preview.style.display = 'none'; // 👈 ซ่อนรูป
+                return; // 👈 หยุดทำงาน
+            }
+
+            // 2. ถ้าขนาดไฟล์โอเค:
             var reader = new FileReader();
             
             reader.onload = function(e) {
                 preview.src = e.target.result;
-                preview.style.display = 'block'; // 👈 แสดงรูป
+                preview.style.display = 'block'; 
             }
             
             reader.readAsDataURL(file);
         } else {
             preview.src = '#';
-            preview.style.display = 'none'; // 👈 ซ่อนรูป
+            preview.style.display = 'none';
         }
     });
 </script>
