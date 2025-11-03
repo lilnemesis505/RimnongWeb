@@ -19,39 +19,49 @@ class CustomerController extends Controller
     }
 
     // สำหรับ Flutter: สมัครสมาชิกผ่าน API
-    public function register(Request $request)
+  public function register(Request $request)
     {
-        // 1. ตรวจสอบความถูกต้องของข้อมูล (Validation)
+        // [แก้ไข] 1. อัปเดต Validation Rules
         $validator = Validator::make($request->all(), [
             'fullname' => 'required|string|max:255',
             'username' => 'required|string|unique:customer,username',
-            'password' => 'required|string|min:6',
+            'password' => 'required|string|min:8', // 👈 (แก้จาก 6 เป็น 8)
             'email'    => 'required|email|unique:customer,email',
-            'cus_tel'  => 'required|string|max:20',
-        ]); //
+            'cus_tel'  => 'required|string|digits:10', // 👈 (แก้จาก max:20 เป็น digits:10)
+        ], [
+            // [เพิ่ม] 2. เพิ่มข้อความแจ้งเตือน (สำหรับส่งกลับไปหา Flutter)
+            'fullname.required' => 'กรุณากรอกชื่อ-สกุล',
+            'username.required' => 'กรุณากรอกชื่อผู้ใช้',
+            'username.unique'   => 'ชื่อผู้ใช้นี้มีคนใช้แล้ว',
+            'password.required' => 'กรุณากรอกรหัสผ่าน',
+            'password.min'      => 'รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร',
+            'email.required'    => 'กรุณากรอกอีเมล',
+            'email.email'       => 'รูปแบบอีเมลไม่ถูกต้อง',
+            'email.unique'      => 'อีเมลนี้มีคนใช้แล้ว',
+            'cus_tel.required'  => 'กรุณากรอกเบอร์โทร',
+            'cus_tel.digits'    => 'เบอร์โทรต้องมี 10 หลักเท่านั้น',
+        ]); 
 
-        // 2. ถ้าข้อมูลไม่ถูกต้อง ให้ส่ง error กลับไป
         if ($validator->fails()) {
             return response()->json([
                 'status'  => 'error',
-                'message' => $validator->errors()->first() // ส่งข้อความ error แรกที่เจอ
-            ], 422); // 422 Unprocessable Entity
-        } //
+                'message' => $validator->errors()->first() 
+            ], 422); 
+        } 
 
-        // 3. ถ้าข้อมูลถูกต้อง สร้าง Customer ใหม่
-        $customer = new Customer(); //
-        $customer->fullname = $request->fullname; //
-        $customer->username = $request->username; //
-        $customer->password = Hash::make($request->password); // ✅ เข้ารหัสผ่านเสมอ
-        $customer->email    = $request->email; //
-        $customer->cus_tel  = $request->cus_tel; //
-        $customer->save(); //
+        // 3. (สร้าง Customer ... เหมือนเดิม)
+        $customer = new Customer(); 
+        $customer->fullname = $request->fullname; 
+        $customer->username = $request->username; 
+        $customer->password = Hash::make($request->password); 
+        $customer->email    = $request->email; 
+        $customer->cus_tel  = $request->cus_tel; 
+        $customer->save(); 
 
-        // 4. ส่งข้อความสำเร็จกลับไป
         return response()->json([
             'status'  => 'success',
             'message' => 'สมัครสมาชิกสำเร็จ'
-        ], 201); // 201 Created
+        ], 201);
     }
 
     public function checkUsername(Request $request)
