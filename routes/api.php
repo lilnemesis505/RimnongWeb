@@ -7,6 +7,12 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ApiPasswordResetController;
+
+// [เพิ่ม] 3 Routes สำหรับการรีเซ็ตรหัสผ่าน (Flutter)
+Route::post('/password/request-otp', [ApiPasswordResetController::class, 'sendOtpEmail']);
+Route::post('/password/verify-otp', [ApiPasswordResetController::class, 'verifyOtp']);
+Route::post('/password/reset', [ApiPasswordResetController::class, 'resetPassword']);
 
 Route::post('/register', [CustomerController::class, 'register']);
 Route::get('/customer', [CustomerController::class, 'getCustomer']);
