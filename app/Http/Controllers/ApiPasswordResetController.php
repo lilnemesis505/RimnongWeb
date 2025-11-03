@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers; // (หมายเหตุ: ถ้าไฟล์นี้อยู่ใน App\Http\Controllers\Api\ ให้แก้ namespace ตรงนี้)
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
-use App\Models\Customer; 
-use App\Models\Employee; 
+use App\Models\Customer;
+use App\Models\Employee;
 use Illuminate\Support\Facades\Mail;
-use App\Mail\AdminPasswordResetMail; 
+use App\Mail\AdminPasswordResetMail;
 
 class ApiPasswordResetController extends Controller
 {
@@ -28,9 +28,9 @@ class ApiPasswordResetController extends Controller
             // [ลบ] 2. ลบ user_type ออก
         ]);
 
-        // [แก้ไข] 3. ค้นหาทั้ง 2 ตาราง
+        // [แก้ไข] 3. ค้นหาทั้ง 2 ตาราง (โดยใช้ชื่อคอลัมน์ที่ถูกต้อง)
         $customerExists = Customer::where('email', $request->email)->exists();
-        $employeeExists = Employee::where('email', $request->email)->exists();
+        $employeeExists = Employee::where('em_email', $request->email)->exists(); // 👈 (ใช้ em_email)
 
         if (!$customerExists && !$employeeExists) {
             return response()->json(['status' => 'error', 'message' => 'ไม่พบอีเมลนี้ในระบบ'], 404);
@@ -121,7 +121,7 @@ class ApiPasswordResetController extends Controller
             $passwordUpdated = true;
         }
 
-        $employee = Employee::where('email', $request->email)->first();
+        $employee = Employee::where('em_email', $request->email)->first(); // 👈 (ใช้ em_email)
         if ($employee) {
             $employee->password = Hash::make($request->password);
             $employee->save();
