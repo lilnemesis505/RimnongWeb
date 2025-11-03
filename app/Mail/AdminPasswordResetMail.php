@@ -23,7 +23,7 @@ class AdminPasswordResetMail extends Mailable
  
     public function build()
     {
-        return $this->subject('รหัส OTP สำหรับรีเซ็ตรหัสผ่าน (Admin)')
+        return $this->subject('รหัส OTP สำหรับรีเซ็ตรหัสผ่าน')
                     ->view('emails.admin-password-reset', ['otp' => $this->otp]);
     }
 }
