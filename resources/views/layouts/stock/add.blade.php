@@ -41,7 +41,7 @@
                 <ul class="nav nav-pills nav-sidebar flex-column">
                     <li class="nav-item">
                         <a href="{{ route('stock.index') }}" class="nav-link">
-                            <i class="nav-icon fas fa-box"></i> <p>ข้อมูลล็อตสินค้า</p>
+                            <i class="nav-icon fas fa-box"></i> <p>ข้อมูลวัตถุดิบ</p>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -130,7 +130,7 @@
         </div>
     </div>
 </div>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 
 {{-- [แก้ไข] 2. JavaScript สำหรับ Preview รูป (เพิ่มเช็คขนาดไฟล์) --}}

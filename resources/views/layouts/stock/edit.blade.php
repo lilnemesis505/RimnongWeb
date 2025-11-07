@@ -25,7 +25,7 @@
 
     {{-- (Navbar และ Sidebar ... เหมือนเดิม) --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <span class="navbar-brand">ข้อมูลปรับปรุงล็อตสินค้า</span>
+        <span class="navbar-brand">ข้อมูลปรับปรุงวัตถุดิบ</span>
     </nav>
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
@@ -44,7 +44,7 @@
                 <ul class="nav nav-pills nav-sidebar flex-column">
                     <li class="nav-item">
                         <a href="{{ route('stock.index') }}" class="nav-link">
-                            <i class="nav-icon fas fa-box"></i> <p>ข้อมูลล็อตสินค้า</p>
+                            <i class="nav-icon fas fa-box"></i> <p>ข้อมูลวัตถุดิบ</p>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -54,7 +54,7 @@
                     </li>
                     <li class="nav-item">
                         <a href="#" class="nav-link active text-white">
-                            <i class="nav-icon fas fa-gear"></i> <p>ข้อมูลปรับปรุงล็อตสินค้า</p>
+                            <i class="nav-icon fas fa-gear"></i> <p>ข้อมูลปรับปรุงวัตถุดิบ</p>
                         </a>
                     </li>
                 </ul>

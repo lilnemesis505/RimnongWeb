@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ข้อมูลล็อตสินค้า </title>
+    <title>ข้อมูลวัตถุดิบ </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
     <style>
@@ -36,7 +36,7 @@
     <div class="content-wrapper p-3" style="min-height: 100vh;">
         <div class="card">
             <div class="card-header">
-                <h3 class="card-title"><i class="fas fa-boxes mr-2"></i>ข้อมูลล็อตสินค้า</h3>
+                <h3 class="card-title"><i class="fas fa-boxes mr-2"></i>ข้อมูลวัตถุดิบ</h3>
             </div>
             
             <div class="card-body">
@@ -103,7 +103,7 @@
         </div>
     </div>
 </div>
-
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>
 </html>
