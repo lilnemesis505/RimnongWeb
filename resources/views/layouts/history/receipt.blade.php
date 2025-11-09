@@ -9,10 +9,11 @@
         .receipt-container {
             max-width: 400px;
             margin: 20px auto;
-            border: 1px dashed #ccc;
+            border: 1px dashed #000; /* ⭐️ (Goal 2) เปลี่ยนเป็นสีดำ */
             padding: 20px;
             font-family: 'Courier New', Courier, monospace;
             background-color: #fff;
+            color: #000 !important; /* ⭐️ (Goal 2) บังคับตัวอักษรเป็นสีดำทั้งหมด */
         }
         .receipt-header, .receipt-footer {
             text-align: center;
@@ -22,6 +23,13 @@
             justify-content: space-between;
             margin-bottom: 5px;
         }
+        
+        /* ⭐️ (Goal 1) เพิ่ม CSS นี้เพื่อให้ราคาทั้งหมดจัดชิดขวา */
+        .item-row span:last-child {
+            min-width: 100px; /* กำหนดความกว้างขั้นต่ำ (ปรับได้) */
+            text-align: right;
+        }
+
         @media print {
             .no-print {
                 display: none !important;
@@ -50,7 +58,7 @@
     // ส่วนลดที่แท้จริง
     $totalDiscount = $originalTotal - $netTotal;
     
-    $promoNames = $order->promotions->isNotEmpty() ? $order->promotions->pluck('promo_name')->implode(', ') : 'ไม่มี';
+    // ⭐️ (ลบ $promoNames) - เราจะวนลูปแทน
 @endphp
 
 
@@ -115,17 +123,62 @@
                     
                     <hr class="my-2">
 
-                    <div class="d-flex justify-content-between mb-1">
+                    {{-- ⭐️ (Goal 1) เปลี่ยน class เป็น .item-row --}}
+                    <div class="item-row">
                         <span>ราคารวมสินค้า:</span>
                         <span>{{ number_format($originalTotal, 2) }} บาท</span>
                     </div>
 
-                    <div class="d-flex justify-content-between mb-1">
-                        <span>ส่วนลด ({{ $promoNames }}):</span>
+                    {{-- ⭐️ (ใหม่) แสดงรายการโปรโมชั่นที่ใช้ --}}
+                    @if($order->promotions->isNotEmpty())
+                        <div class="mb-1">
+                            <span style="font-weight:bold;">โปรโมชั่นที่ใช้:</span>
+                            {{-- วนลูปแสดงชื่อโปรโมชั่น --}}
+                            
+                            {{-- ⭐️ เปลี่ยน ul เป็น div และลบ padding/list-style ออก --}}
+                            <div style="margin-bottom: 5px; font-size: 0.95em; margin-top: 5px;">
+                                @foreach($order->promotions as $promo)
+                                    @php
+                                        $discountAmount = 0;
+                                        
+                                        // 1. ตรวจสอบว่าโปรโมชั่นนี้มี pro_id (เชื่อมโยงกับสินค้า) หรือไม่
+                                        if (!empty($promo->pro_id)) {
+                                        
+                                            // 2. หาสินค้าในออเดอร์ (details) ที่ตรงกับ pro_id ของโปรโมชั่นนี้
+                                            $matchingDetail = $order->details->firstWhere('pro_id', $promo->pro_id);
+                                            
+                                            if ($matchingDetail && $promo->promo_discount) {
+                                                // 3. ถ้าเจอ, ส่วนลด = (ส่วนลดต่อชิ้น * จำนวน)
+                                                $discountAmount = $promo->promo_discount * $matchingDetail->amount;
+                                            }
+                                            
+                                        } else if ($promo->promo_discount) {
+                                            // 4. ถ้าไม่เชื่อมโยงกับสินค้า (pro_id=null)
+                                            $discountAmount = $promo->promo_discount;
+                                        }
+                                    @endphp
+                                    
+                                    {{-- ⭐️ เปลี่ยน li เป็น div.item-row และแยก span ซ้าย-ขวา --}}
+                                    <div class="item-row">
+                                        <span>{{ $promo->promo_name }}</span>
+                                        @if($discountAmount > 0)
+                                            <span>-{{ number_format($discountAmount, 2) }} บาท</span>
+                                        @endif
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+
+                    {{-- ⭐️ (Goal 1) เปลี่ยน class เป็น .item-row --}}
+                    <div class="item-row">
+                        <span>ส่วนลดรวม:</span>
+                         {{-- ⭐️ (Goal 2) ลบ style สีแดง --}}
                         <span>-{{ number_format($totalDiscount, 2) }} บาท</span>
                     </div>
 
-                    <div class="d-flex justify-content-between font-weight-bold mb-2">
+                    {{-- ⭐️ (Goal 1) เปลี่ยน class เป็น .item-row และเพิ่ม font-weight-bold --}}
+                    <div class="item-row font-weight-bold">
                         <span>ราคารวมสุทธิ:</span>
                         <span>{{ number_format($netTotal, 2) }} บาท</span>
                     </div>
