@@ -26,7 +26,7 @@
             <label for="email">อีเมล</label>
             <input type="email" name="email" id="email" class="form-control mb-2" required value="{{ $email ?? old('email') }}" readonly>
             
-            <label for="password">รหัสผ่านใหม่(6ตัวอักษรขึ้นไป)</label>
+            <label for="password">รหัสผ่านใหม่(8ตัวอักษรขึ้นไป)</label>
            <input type="password" name="password" id="password" class="form-control mb-3" required>
 
             <label for="password_confirmation">ยืนยันรหัสผ่านใหม่</label>
