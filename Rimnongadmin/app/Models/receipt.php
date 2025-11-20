@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,4 +17,12 @@ class Receipt extends Model
         're_date',
         'price_total',
     ];
+    protected $casts = [
+        're_date' => 'datetime',
+    ];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class, 'order_id', 'order_id');
+    }
 }

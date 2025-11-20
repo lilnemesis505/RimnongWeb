@@ -13,6 +13,8 @@ return new class extends Migration
             $table->unsignedBigInteger('type_id'); 
             $table->string('pro_name', 50); 
             $table->decimal('price', 10, 2); 
+            $table->string('image', 255)->nullable();
+            $table->string('image_id', 255)->nullable(); // 🔥 เพิ่มคอลัมน์ image เพื่อเก็บ URL ของรูปภาพ
 
             // เพิ่ม foreign key constraint
             $table->foreign('type_id')

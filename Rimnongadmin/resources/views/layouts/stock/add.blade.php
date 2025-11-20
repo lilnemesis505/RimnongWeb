@@ -3,18 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>เพิ่มวัสดุคงคลัง</title>
-    <!-- AdminLTE CSS via CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+    
+    <style>
+        .image-preview {
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-top: 15px;
+            display: none; 
+        }
+    </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
-    <!-- Navbar -->
+    {{-- (Navbar และ Sidebar ... เหมือนเดิม) --}}
     <nav class="main-header navbar navbar-expand navbar-white navbar-light">
         <span class="navbar-brand">เพิ่มข้อมูลนำเข้า</span>
     </nav>
-
-    <!-- Sidebar -->
     <aside class="main-sidebar sidebar-dark-primary elevation-4">
         <a href="#" class="brand-link">
             <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
@@ -32,7 +41,7 @@
                 <ul class="nav nav-pills nav-sidebar flex-column">
                     <li class="nav-item">
                         <a href="{{ route('stock.index') }}" class="nav-link">
-                            <i class="nav-icon fas fa-box"></i> <p>ข้อมูลล็อตสินค้า</p>
+                            <i class="nav-icon fas fa-box"></i> <p>ข้อมูลวัตถุดิบ</p>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -45,19 +54,36 @@
         </div>
     </aside>
 
-    <!-- Content Wrapper -->
     <div class="content-wrapper p-3">
         <div class="card card-primary">
             <div class="card-header">
                 <h3 class="card-title"><i class="fas fa-box"></i> เพิ่มวัสดุคงคลัง</h3>
             </div>
 
-            <form action="{{ route('stock.store') }}" method="POST">
+            <form action="{{ route('stock.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="card-body">
+
+                    {{-- (ส่วนแสดงผล Error ... เหมือนเดิม) --}}
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <h5 class="font-weight-bold">เกิดข้อผิดพลาด!</h5>
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+                    @if (session('error'))
+                        <div class="alert alert-danger">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
                     <div class="form-group">
                         <label>ชื่อวัสดุ</label>
-                        <input type="text" name="mat_name" class="form-control" placeholder="กรอกชื่อวัสดุ" required>
+                        <input type="text" name="mat_name" class="form-control" placeholder="กรอกชื่อวัสดุ" value="{{ old('mat_name') }}" required>
                     </div>
 
                     <div class="form-group">
@@ -65,43 +91,33 @@
                         <select name="type_id" class="form-control" required>
                             <option value="">-- เลือกประเภท --</option>
                             @foreach($types as $type)
-                                <option value="{{ $type->type_id }}">{{ $type->type_name }}</option>
+                                <option value="{{ $type->type_id }}" {{ old('type_id') == $type->type_id ? 'selected' : '' }}>
+                                    {{ $type->type_name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label>วันที่นำเข้า</label>
-                        <input type="date" name="import_date" class="form-control" required>
-                    </div>
-
-                    <div class="form-group">
                         <label>จำนวนที่นำเข้า</label>
-                        <input type="number" name="quantity" class="form-control" required>
+                        {{-- [แก้ไข] 1. ลบ required, เพิ่ม max, min และค่าเริ่มต้น 0 --}}
+                        <input type="number" name="quantity" class="form-control" value="{{ old('quantity', 0) }}" min="0" max="999999">
                     </div>
 
                     <div class="form-group">
                         <label>วันหมดอายุ</label>
-                        <input type="date" name="exp_date" class="form-control">
-                    </div>
-
-                    <div class="form-group">
-                        <label>จำนวนคงเหลือ</label>
-                        <input type="number" name="remain" class="form-control" required>
+                        <input type="date" name="exp_date" class="form-control" value="{{ old('exp_date') }}">
                     </div>
 
                     <div class="form-group">
                         <label>ราคาต่อหน่วย</label>
-                        <input type="number" step="0.01" name="unitcost" class="form-control" required>
+                        <input type="number" step="0.01" name="unitcost" class="form-control" value="{{ old('unitcost') }}" required>
                     </div>
 
                     <div class="form-group">
-                        <label>สถานะ</label>
-                        <select name="status" class="form-control" required>
-                            <option value="0">ปกติ</option>
-                            <option value="1">หมด และยังไม่ได้สั่ง</option>
-                            <option value="2">หมด และสั่งซื้อแต่ยังไม่ได้รับ</option>
-                        </select>
+                        <label for="image_upload">รูปภาพวัสดุ (รองรับ .jpg, .png, ไม่เกิน 3MB)</label>
+                        <input type="file" name="image_upload" id="image_upload" class="form-control-file" accept=".jpg, .jpeg, .png">
+                        <img id="image_preview" src="#" alt="Image Preview" class="image-preview" />
                     </div>
                 </div>
 
@@ -114,8 +130,42 @@
         </div>
     </div>
 </div>
-
-<!-- AdminLTE JS via CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
+{{-- [แก้ไข] 2. JavaScript สำหรับ Preview รูป (เพิ่มเช็คขนาดไฟล์) --}}
+<script>
+    document.getElementById('image_upload').addEventListener('change', function(event) {
+        var preview = document.getElementById('image_preview');
+        var file = event.target.files[0];
+        var maxSize = 3 * 1024 * 1024; // 3MB (คิดเป็น bytes)
+
+        if (file) {
+            // 1. ตรวจสอบขนาดไฟล์
+            if (file.size > maxSize) {
+                // ถ้าไฟล์ใหญ่เกินไป:
+                alert('ขนาดรูปภาพต้องไม่เกิน 3MB ครับ');
+                event.target.value = ''; // 👈 ล้างไฟล์ที่เลือก
+                preview.src = '#';
+                preview.style.display = 'none'; // 👈 ซ่อนรูป
+                return; // 👈 หยุดทำงาน
+            }
+
+            // 2. ถ้าขนาดไฟล์โอเค:
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block'; 
+            }
+            
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+        }
+    });
+</script>
+
 </body>
 </html>

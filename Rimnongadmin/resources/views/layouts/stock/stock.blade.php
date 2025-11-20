@@ -2,104 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>ข้อมูลล็อตสินค้า </title>
-    <!-- AdminLTE CSS via CDN -->
+    <title>ข้อมูลวัตถุดิบ </title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+    <style>
+        .table-image {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+            background-color: #eee;
+        }
+        .table th.text-center, .table td.text-center {
+            text-align: center;
+            vertical-align: middle; 
+        }
+        .table th.text-right, .table td.text-right {
+            text-align: right;
+            vertical-align: middle;
+        }
+        .table td {
+             vertical-align: middle;
+        }
+        .pagination {
+            justify-content: center;
+        }
+    </style>
 </head>
 <body class="hold-transition sidebar-mini">
 <div class="wrapper">
-    <!-- Navbar -->
-    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-        <span class="navbar-brand">ข้อมูลล็อตสินค้า</span>
-    </nav>
-
-    <!-- Sidebar -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
-        <a href="#" class="brand-link">
-            <span class="brand-text font-weight-light">{{ session('admin_fullname') }}</span>
-        </a>
-        <div class="sidebar">
-            <nav class="mt-2">
-                <ul class="nav nav-pills nav-sidebar flex-column">
-                    <li class="nav-item">
-                        <a href="{{ route('welcome') }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-home-alt"></i> <p>หน้าหลัก</p>
-                        </a>
-                    </li>
-                </ul>
-                <hr style="border-top: 1px solid #fff;">
-                <ul class="nav nav-pills nav-sidebar flex-column">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link active" style="background-color: #007bff;">
-                            <i class="nav-icon fas fa-box"></i> <p>ข้อมูลล็อตสินค้า</p>
-                        </a>
-                    </li>
-                     <li class="nav-item">
-                        <a href="{{ route('stock.add') }}" class="nav-link text-white">
-                            <i class="nav-icon fas fa-plus"></i> <p>เพิ่มข้อมูลนำเข้า</p>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </aside>
-
-    <!-- Content Wrapper -->
+@include('layouts.assets._navbar')
+   @include('layouts.assets._sidebar')
     <div class="content-wrapper p-3" style="min-height: 100vh;">
         <div class="card">
-            <div class="card-body p-0">
-                <table class="table table-striped table-bordered">
-                    <thead class="thead-dark">
-                        <tr>
-                            <th>#</th>
-                            <th>ชื่อวัสดุ</th>
-                            <th>ประเภท</th>
-                            <th>วันที่นำเข้า</th>
-                            <th>จำนวน</th>
-                            <th>วันหมดอายุ</th>
-                            <th>คงเหลือ</th>
-                            <th>ราคาต่อหน่วย</th>
-                            <th>สถานะ</th>
-                            <th>จัดการ</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach($stock_mats as $i => $mat)
-                        <tr>
-                            <td>{{ $stock_mats->firstItem() + $i }}</td>
-                            <td>{{ $mat->mat_name }}</td>
-                            <td>{{ $mat->type->type_name ?? '-' }}</td>
-                            <td>{{ $mat->import_date ?? '-' }}</td>
-                            <td>{{ $mat->quantity }}</td>
-                            <td>{{ $mat->exp_date ?? '-' }}</td>
-                            <td>{{ $mat->remain }}</td>
-                            <td>{{ number_format($mat->unitcost, 2) }}</td>
-                            <td>
-                            @switch($mat->status)
-                            @case(0)
-                            ปกติ
-                            @break
-                            @case(1)
-                            หมด และยังไม่ได้สั่ง
-                            @break
-                            @case(2)
-                            หมด และสั่งซื้อแต่ยังไม่ได้รับ
-                            @break
-                            @default
-                            ไม่ทราบสถานะ
-                            @endswitch
-                            </td>
-                            <td>
-                            <a href="{{ route('stock.edit', $mat->mat_id) }}" class="btn btn-sm"><i class="fas fa-edit"></i> แก้ไข</a>
-                            </a>
-                            </td>
-
-
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-boxes mr-2"></i>ข้อมูลวัตถุดิบ</h3>
+            </div>
+            
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th class="text-center" style="width: 5%;">#</th>
+                                <th class="text-center" style="width: 80px;">รูปภาพ</th> 
+                                <th>ชื่อวัสดุ</th>
+                                <th>ประเภท</th>
+                                <th class="text-center">วันที่นำเข้า</th> <th class="text-center">จำนวนที่นำเข้า(ล่าสุด)</th> <th class="text-center">วันหมดอายุ</th>
+                                <th class="text-center">ยอดคงเหลือ</th> <th class="text-right">ราคาต่อหน่วย</th>
+                                <th class="text-center">สถานะ</th>
+                                <th class="text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($stock_mats as $i => $mat)
+                            <tr>
+                                <td class="text-center">{{ $stock_mats->firstItem() + $i }}</td>
+                                <td class="text-center">
+                                    @if($mat->image)
+                                        <img src="{{ $mat->image }}?tr=w-50,h-50,fo-auto" alt="{{ $mat->mat_name }}" class="table-image">
+                                    @else
+                                        <span class="fa-stack fa-lg">
+                                          <i class="fas fa-camera fa-stack-1x"></i>
+                                          <i class="fas fa-ban fa-stack-2x text-danger" style="opacity: 0.7"></i>
+                                        </span>
+                                    @endif
+                                </td>
+                                <td>{{ $mat->mat_name }}</td>
+                                <td>{{ $mat->type->type_name ?? '-' }}</td>
+                                <td class="text-center">{{ $mat->import_date ? \Carbon\Carbon::parse($mat->import_date)->format('m/d/Y') : '-' }}</td>
+                                <td class="text-center">{{ $mat->quantity }}</td>
+                                <td class="text-center">{{ $mat->exp_date ? \Carbon\Carbon::parse($mat->exp_date)->format('m/d/Y') : '-' }}</td>
+                                <td class="text-center">{{ $mat->remain }}</td>
+                                <td class="text-right">{{ number_format($mat->unitcost, 2) }}</td>
+                                
+                                <td class="text-center">
+                                    @if($mat->status == 2)
+                                        <span class="badge badge-warning">รอของเข้า</span>
+                                    @elseif($mat->remain > 0)
+                                        <span class="badge badge-success">ปกติ</span>
+                                    @else
+                                        <span class="badge badge-danger">หมด</span>
+                                    @endif
+                                </td>
+                                
+                                <td class="text-center">
+                                    <a href="{{ route('stock.edit', $mat->mat_id) }}" class="btn btn-warning btn-sm">
+                                        <i class="fas fa-edit"></i> แก้ไข
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div class="card-footer clearfix">
                 {{ $stock_mats->links() }}
@@ -107,8 +103,7 @@
         </div>
     </div>
 </div>
-
-<!-- AdminLTE JS via CDN -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 </body>
 </html>
