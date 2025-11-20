@@ -187,7 +187,7 @@
                         <li class="nav-item"><a href="{{ route('salereport.index') }}" class="nav-link {{ Request::routeIs('salereport.index') ? 'active' : '' }}"><i class="fas fa-chart-line nav-icon"></i><p>รายงานการขายสินค้า</p></a></li>
                         <li class="nav-item"><a href="{{ route('report.bills') }}" class="nav-link {{ Request::routeIs('report.bills') ? 'active' : '' }}"><i class="fas fa-chart-bar nav-icon"></i> <p>รายงานยอดขาย</p></a></li>
                         <li class="nav-item"><a href="{{ route('report.withdrawals') }}" class="nav-link {{ Request::routeIs('report.withdrawals') ? 'active' : '' }}"><i class="fas fa-clipboard-list nav-icon"></i> <p>รายงานการเบิกวัตถุดิบ</p></a></li>
-                        <li class="nav-item"><a href="{{ route('report.adjustments') }}" class="nav-link {{ Request::routeIs('report.adjustments') ? 'active' : '' }}"><i class="fas fa-sliders-h nav-icon "></i> <p>รายงานกาปรับยอดวัตถุดิบ</p></a></li>
+                        <li class="nav-item"><a href="{{ route('report.adjustments') }}" class="nav-link {{ Request::routeIs('report.adjustments') ? 'active' : '' }}"><i class="fas fa-sliders-h nav-icon "></i> <p>รายงานกาปรับยอดวัตถุwdawdwaดิบ</p></a></li>
                     </ul>
                 </li>
                 <li class="nav-header">อื่นๆ</li>
