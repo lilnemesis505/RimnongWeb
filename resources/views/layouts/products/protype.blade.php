@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ประเภทสินค้า</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+<div class="wrapper">
+
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+        <span class="navbar-brand">ประเภทสินค้า</span>
+    </nav>
+
+   @include('layouts.assets._sidebar')
+
+    <div class="content-wrapper p-3">
+        {{-- ✅ 1. ส่วนฟอร์มสำหรับเพิ่มข้อมูล (กล่องบน) --}}
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-tags"></i> เพิ่มประเภทสินค้า</h3>
+                    </div>
+                    <form action="{{ route('protype.store') }}" method="POST">
+                        @csrf
+                        <div class="card-body">
+                            <div class="form-group">
+                                <label for="type_name">ชื่อประเภทสินค้า</label>
+                                <input type="text" name="type_name" id="type_name" class="form-control @error('type_name') is-invalid @enderror" placeholder="กรอกชื่อประเภทสินค้า" required value="{{ old('type_name') }}">
+                                @error('type_name')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                        <div class="card-footer text-center">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-save"></i> บันทึก
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {{-- ✅ 2. ส่วนตารางแสดงข้อมูล (กล่องล่าง) --}}
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-8">
+                <div class="card card-info">
+                     <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-list"></i> รายการประเภทสินค้า</h3>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-bordered table-hover mb-0">
+                            <thead class="thead-light text-center">
+                                <tr>
+                                    <th style="width: 15%;">#</th>
+                                    <th>ชื่อประเภทสินค้า</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($protypes as $index => $protype)
+                                    <tr>
+                                        <td class="text-center">{{ $index + 1 }}</td>
+                                        <td>{{ $protype->type_name }}</td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="2" class="text-center text-muted">ไม่มีข้อมูลประเภทสินค้า</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
+</body>
+</html>
