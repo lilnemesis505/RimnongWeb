@@ -56,6 +56,29 @@
                         </thead>
                         <tbody>
                             @foreach($stock_mats as $i => $mat)
+                            
+                            {{-- [แก้ไข] เพิ่มตรรกะตรวจสอบวันหมดอายุ (เหมือน HomeController) --}}
+                            @php
+                                $today = \Carbon\Carbon::today();
+                                $next15Days = $today->copy()->addDays(15); // เช็คล่วงหน้า 15 วัน
+                                
+                                $isExpiring = false;
+                                $isExpired = false;
+
+                                if ($mat->exp_date && $mat->remain > 0) {
+                                    $expDate = \Carbon\Carbon::parse($mat->exp_date);
+                                    
+                                    // ถ้าวันที่หมดอายุ น้อยกว่า วันนี้ = หมดอายุแล้ว
+                                    if ($expDate->lt($today)) {
+                                        $isExpired = true;
+                                    } 
+                                    // ถ้าวันที่หมดอายุ อยู่ระหว่าง วันนี้ ถึง อีก 15 วัน = ใกล้หมดอายุ
+                                    elseif ($expDate->lte($next15Days)) {
+                                        $isExpiring = true;
+                                    }
+                                }
+                            @endphp
+
                             <tr>
                                 <td class="text-center">{{ $stock_mats->firstItem() + $i }}</td>
                                 <td class="text-center">
@@ -77,12 +100,18 @@
                                 <td class="text-right">{{ number_format($mat->unitcost, 2) }}</td>
                                 
                                 <td class="text-center">
+                                    {{-- [แก้ไข] แสดงสถานะตามลำดับความสำคัญ --}}
                                     @if($mat->status == 2)
                                         <span class="badge badge-warning">รอของเข้า</span>
-                                    @elseif($mat->remain > 0)
-                                        <span class="badge badge-success">ปกติ</span>
-                                    @else
+                                    @elseif($mat->remain <= 0)
                                         <span class="badge badge-danger">หมด</span>
+                                    @elseif($isExpired)
+                                        <span class="badge badge-secondary">หมดอายุ</span>
+                                    @elseif($isExpiring)
+                                        {{-- ใช้สีส้มสำหรับใกล้หมดอายุ --}}
+                                        <span class="badge" style="background-color: #fd7e14; color: white;">ใกล้หมดอายุ</span>
+                                    @else
+                                        <span class="badge badge-success">ปกติ</span>
                                     @endif
                                 </td>
                                 
