@@ -218,6 +218,17 @@
         </div>
     </div>
 </div>
+
+</div>
+</section>
+</div>
+<footer class="main-footer text-sm">
+        <div class="float-right d-none d-sm-inline text-muted">
+            ** เว็บไซต์นี้มีไว้เพื่อการศึกษาของนศ.ในรายวิชาการศึกษาอิสระเท่านั้น **
+        </div>
+        <strong class="text-muted">Copyright &copy; 2016. Department of Computer, CMRU.</strong> 
+        <span class="text-muted">All rights reserved.</span>
+    </footer>
     
     {{-- (Modal Logout - โค้ดที่คุณส่งมาถูกต้องครับ) --}}
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="logoutModalLabel" aria-hidden="true">

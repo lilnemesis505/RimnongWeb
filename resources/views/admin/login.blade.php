@@ -94,6 +94,29 @@
         .panel-warning {
             text-align: center;
         }
+        .footer-copyright {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 15px 10px;
+            color: #e0e0e0; /* สีตัวหนังสือขาวนวล */
+            background-color: rgba(0, 0, 0, 0.7); /* พื้นหลังดำโปร่งแสง */
+            font-size: 0.85rem;
+            z-index: 10; /* ให้ลอยอยู่เหนือ Background */
+        }
+        
+        /* จัดระยะห่างบรรทัด */
+        .footer-copyright p {
+            margin-bottom: 2px;
+        }
+        
+        /* เน้นข้อความคำเตือนบรรทัดล่าง */
+        .footer-copyright .warning-text {
+            color: #ffc107; /* สีเหลืองทอง */
+            font-weight: bold;
+        }
 
     </style>
 </head>
@@ -184,6 +207,11 @@
         </div> {{-- จบ flipper-track --}}
 
     </div> {{-- จบ login-box --}}
+    {{-- [เพิ่ม] ส่วน Footer --}}
+    <footer class="footer-copyright">
+        <p>Copyright &copy; 2016. Department of Computer, CMRU. All rights reserved.</p>
+        <span class="warning-text">** เว็บไซต์นี้มีไว้เพื่อการศึกษาของนศ.ในรายวิชาการศึกษาอิสระเท่านั้น **</span>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>

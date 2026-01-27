@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'App\\Http\\Controllers\\AdminLoginController' => $baseDir . '/app/Http/Controllers/AdminLoginController.php',
+    'App\\Http\\Controllers\\ApiPasswordResetController' => $baseDir . '/app/Http/Controllers/ApiPasswordResetController.php',
     'App\\Http\\Controllers\\Api\\AuthController' => $baseDir . '/app/Http/Controllers/Api/AuthController.php',
     'App\\Http\\Controllers\\Auth\\AdminForgotPasswordController' => $baseDir . '/app/Http/Controllers/Auth/AdminForgotPasswordController.php',
     'App\\Http\\Controllers\\Controller' => $baseDir . '/app/Http/Controllers/Controller.php',
@@ -20,7 +21,10 @@ return array(
     'App\\Http\\Controllers\\PromotionController' => $baseDir . '/app/Http/Controllers/PromotionController.php',
     'App\\Http\\Controllers\\ProtypeController' => $baseDir . '/app/Http/Controllers/ProtypeController.php',
     'App\\Http\\Controllers\\ReportController' => $baseDir . '/app/Http/Controllers/ReportController.php',
+    'App\\Http\\Controllers\\StockAdjustmentReportController' => $baseDir . '/app/Http/Controllers/StockAdjustmentReportController.php',
+    'App\\Http\\Controllers\\StockMatController' => $baseDir . '/app/Http/Controllers/StockMatController.php',
     'App\\Http\\Controllers\\WithdrawalController' => $baseDir . '/app/Http/Controllers/WithdrawalController.php',
+    'App\\Http\\Controllers\\WithdrawalReportController' => $baseDir . '/app/Http/Controllers/WithdrawalReportController.php',
     'App\\Http\\Kernel' => $baseDir . '/app/Http/Kernel.php',
     'App\\Http\\Middleware\\AdminAuth' => $baseDir . '/app/Http/Middleware/AdminAuth.php',
     'App\\Mail\\AdminPasswordResetMail' => $baseDir . '/app/Mail/AdminPasswordResetMail.php',
